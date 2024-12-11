@@ -1,70 +1,85 @@
 package com.github.catvod.spider;
 
-import android.util.Base64;
-
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.live.TxtSubscribe;
 import com.github.catvod.net.OkHttp;
-import com.github.catvod.parser.MixDemo;
-import com.github.catvod.parser.MixWeb;
+import com.github.catvod.utils.ProxyVideo;
+import com.github.catvod.utils.Util;
+import com.google.gson.Gson;
 
 import java.io.ByteArrayInputStream;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Proxy extends Spider {
 
-    public static int localPort = -1;
+    private static int port = -1;
 
-    static void adjustLocalPort() {
-        if (localPort > 0)
-            return;
+    public static Object[] proxy(Map<String, String> params) throws Exception {
+        switch (params.get("do")) {
+            case "ck":
+                return new Object[]{200, "text/plain; charset=utf-8", new ByteArrayInputStream("ok".getBytes("UTF-8"))};
+            case "ali":
+                return Ali.proxy(params);
+            case "quark":
+                return Quark.proxy(params);
+            case "uc":
+                return UC.proxy(params);
+            case "bili":
+                return Bili.proxy(params);
+            case "webdav":
+                return WebDAV.vod(params);
+            case "local":
+                return Local.proxy(params);
+            case "proxy":
+                return commonProxy(params);
+            default:
+                return null;
+        }
+    }
+
+    private static final List<String> keys = Arrays.asList("url", "header", "do", "Content-Type", "User-Agent", "Host");
+
+    private static Object[] commonProxy(Map<String, String> params) throws Exception {
+        String url = Util.base64Decode(params.get("url"));
+        Map<String, String> header = new Gson().fromJson(Util.base64Decode(params.get("header")), Map.class);
+        if (header == null) header = new HashMap<>();
+        List<String> keys = Arrays.asList("range", "connection", "accept-encoding");
+        for (String key : params.keySet()) {
+            if (keys.contains(key.toLowerCase())) {
+                header.put(key, params.get(key));
+            }
+        }
+        /*for (Map.Entry<String, String> entry : params.entrySet()) {
+            if (!keys.contains(entry.getKey())) header.put(entry.getKey(), entry.getValue());
+        }*/
+        return ProxyVideo.proxy(url, header);
+    }
+
+
+    static void adjustPort() {
+        if (Proxy.port > 0) return;
         int port = 9978;
         while (port < 10000) {
             String resp = OkHttp.string("http://127.0.0.1:" + port + "/proxy?do=ck", null);
             if (resp.equals("ok")) {
                 SpiderDebug.log("Found local server port " + port);
-                localPort = port;
+                Proxy.port = port;
                 break;
             }
             port++;
         }
     }
 
-    public static String localProxyUrl() {
-        adjustLocalPort();
-        return "http://127.0.0.1:" + Proxy.localPort + "/proxy";
+    public static int getPort() {
+        adjustPort();
+        return port;
     }
 
-    public static Object[] proxy(Map<String, String> params) {
-        try {
-            String what = params.get("do");
-            if (what.equals("live")) {
-                String type = params.get("type");
-                if (type.equals("txt")) {
-                    String ext = params.get("ext");
-                    if (!ext.startsWith("http")) {
-                        ext = new String(Base64.decode(ext, Base64.DEFAULT | Base64.URL_SAFE | Base64.NO_WRAP), "UTF-8");
-                    }
-                    return TxtSubscribe.load(ext);
-                }
-            } else if (what.equals("ck")) {
-                Object[] result = new Object[3];
-                result[0] = 200;
-                result[1] = "text/plain; charset=utf-8";
-                ByteArrayInputStream baos = new ByteArrayInputStream("ok".getBytes("UTF-8"));
-                result[2] = baos;
-                return result;
-            } else if (what.equals("MixDemo")) {
-                return MixDemo.loadHtml(params.get("flag"), params.get("url"));
-            } else if (what.equals("MixWeb")) {
-                return MixWeb.loadHtml(params.get("flag"), params.get("url"));
-            } else if (what.equals("xunlei8")) {
-                return Xunlei8.loadPic(params.get("pic"));
-            }
-        } catch (Throwable th) {
-            th.printStackTrace();
-        }
-        return null;
+    public static String getUrl() {
+        adjustPort();
+        return "http://127.0.0.1:" + port + "/proxy";
     }
 }

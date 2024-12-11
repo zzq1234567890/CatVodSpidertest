@@ -6,10 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * @author FongMi
- * <a href="https://github.com/FongMi/CatVodSpider">CatVodSpider</a>
- */
 public class OkResult {
 
     private final int code;

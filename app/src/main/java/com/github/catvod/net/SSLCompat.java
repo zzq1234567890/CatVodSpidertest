@@ -1,6 +1,6 @@
 package com.github.catvod.net;
 
-//import android.annotation.SuppressLint;
+import android.annotation.SuppressLint;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -17,10 +17,6 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.X509TrustManager;
 
-/**
- * @author FongMi
- * <a href="https://github.com/FongMi/CatVodSpider">CatVodSpider</a>
- */
 public class SSLCompat extends SSLSocketFactory {
 
     private SSLSocketFactory factory;
@@ -97,7 +93,7 @@ public class SSLCompat extends SSLSocketFactory {
         if (cipherSuites != null) ssl.setEnabledCipherSuites(cipherSuites);
     }
 
-    //@SuppressLint({"TrustAllX509TrustManager", "CustomX509TrustManager"})
+    @SuppressLint({"TrustAllX509TrustManager", "CustomX509TrustManager"})
     public static final X509TrustManager TM = new X509TrustManager() {
 
         @Override

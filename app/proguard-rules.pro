@@ -1,40 +1,46 @@
--optimizationpasses 0
--dontusemixedcaseclassnames
--dontskipnonpubliclibraryclasses
--dontskipnonpubliclibraryclassmembers
--dontpreverify
--dontoptimize
--verbose
--printmapping proguardMapping.txt
--optimizations !code/simplification/cast,!field/*,!class/merging/*
--keepattributes *Annotation*,InnerClasses
--keepattributes EnclosingMethod, InnerClasses
--keepattributes *Annotation*
--keepattributes Signature
--keepattributes LineNumberTable
--renamesourcefileattribute SourceFile
-
--obfuscationdictionary build/obfuscation-dictionary.txt
--classobfuscationdictionary build/class-dictionary.txt
--packageobfuscationdictionary build/package-dictionary.txt
-
+# Merge
 -flattenpackagehierarchy com.github.catvod.spider.merge
--repackageclasses com.github.catvod.spider.merge
+-dontwarn org.slf4j.impl.StaticLoggerBinder
 
--dontwarn okio.**
--keep class okio.**{*;}
--dontwarn com.squareup.okhttp.**
--dontwarn okhttp3.**
--keep class okhttp3.**{*;}
--dontwarn com.google.**
--keep class com.google.**{*;}
--dontwarn com.android.**
--keep class com.android.**{*;}
--dontwarn kotlin.**
--keep class kotlin.**{*;}
--dontwarn kotlinx.**
--keep class kotlinx.**{*;}
-
+# Spider
+-keep class com.github.catvod.js.* { *; }
 -keep class com.github.catvod.crawler.* { *; }
 -keep class com.github.catvod.spider.* { public <methods>; }
 -keep class com.github.catvod.parser.* { public <methods>; }
+
+# AndroidX
+-keep class androidx.core.** { *; }
+
+# Gson
+-keep class com.google.gson.** { *; }
+
+# OkHttp
+-dontwarn okhttp3.**
+-keep class okio.** { *; }
+-keep class okhttp3.** { *; }
+
+# Logger
+-keep class com.orhanobut.logger.** { *; }
+
+# QuickJS
+-keep class com.whl.quickjs.** { *; }
+
+# Sardine
+-keep class com.thegrizzlylabs.sardineandroid.** { *; }
+
+# Smbj
+-dontwarn org.xmlpull.v1.**
+-dontwarn android.content.res.**
+-keep class com.hierynomus.** { *; }
+-keep class net.engio.mbassy.** { *; }
+
+# Zxing
+-keep class com.google.zxing.** { *; }
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+# Please add these rules to your existing keep rules in order to suppress warnings.
+# This is generated automatically by the Android Gradle plugin.
+-dontwarn org.bouncycastle.jce.provider.BouncyCastleProvider

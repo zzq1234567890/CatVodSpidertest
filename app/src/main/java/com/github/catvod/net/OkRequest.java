@@ -2,6 +2,8 @@ package com.github.catvod.net;
 
 import android.text.TextUtils;
 
+import com.github.catvod.utils.Util;
+
 import java.io.IOException;
 import java.util.Map;
 
@@ -12,10 +14,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-/**
- * @author FongMi
- * <a href="https://github.com/FongMi/CatVodSpider">CatVodSpider</a>
- */
 class OkRequest {
 
     private final Map<String, String> header;
@@ -60,9 +58,7 @@ class OkRequest {
     private void setParams() {
         url = url + "?";
         for (String key : params.keySet()) url = url.concat(key + "=" + params.get(key) + "&");
-        if (url != null && url.length() > 1) {
-            url = url.substring(0, url.length() - 1);
-        }
+        url = Util.substring(url);
     }
 
     public OkResult execute(OkHttpClient client) {

@@ -1,18 +1,25 @@
 plugins {
     id 'com.android.application'
     id 'ru.cleverpumpkin.proguard-dictionaries-generator'
+    id 'org.jetbrains.kotlin.android'
 }
-
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
 android {
-    namespace 'com.github.catvod.demo'
-    compileSdkVersion rootProject.compileSdkVersion
+    namespace 'com.github.catvod'
+
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.github.catvod.demo"
-        minSdkVersion rootProject.miniSdkVersion
-        targetSdkVersion rootProject.targetSdkVersion
-        versionCode rootProject.appVersionCode
-        versionName rootProject.appVersionName
+        minSdk 16
+        targetSdk 34
+        ndk { abiFilters "arm64-v8a" }
+
+
     }
 
     buildTypes {
@@ -20,27 +27,57 @@ android {
             minifyEnabled true
             proguardFiles 'proguard-rules.pro'
             proguardDictionaries {
-                dictionaryNames = [
-                        "build/class-dictionary",
-                        "build/package-dictionary",
-                        "build/obfuscation-dictionary"
-                ]
+                dictionaryNames = ["build/class-dictionary", "build/package-dictionary", "build/obfuscation-dictionary"]
                 minLineLength 1
                 maxLineLength 3
                 linesCountInDictionary 100000
             }
         }
     }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    testOptions {
+        unitTests.returnDefaultValues = true
+        unitTests.includeAndroidResources = true
+    }
+    kotlinOptions {
+        jvmTarget = "11"
+
+    }
+
+    configurations.configureEach {
+        resolutionStrategy {
+            force 'com.squareup.okhttp3:okhttp:3.12.13'
+        }
     }
 }
 
 dependencies {
-    implementation "org.jsoup:jsoup:$jsoup_version"
-    implementation "cn.wanghaomiao:JsoupXpath:$jsoupxpath_version"
-    implementation "com.squareup.okhttp3:okhttp:$okhttp_version"
-    implementation 'com.google.code.gson:gson:2.8.6'
-    implementation 'com.google.net.cronet:cronet-okhttp:0.1.0'
+    implementation 'com.github.thegrizzlylabs:sardine-android:0.9'
+    implementation 'wang.harlon.quickjs:wrapper-android:2.0.0'
+    implementation 'com.squareup.okhttp3:okhttp:3.12.13'
+    implementation 'com.google.code.gson:gson:2.11.0'
+    implementation 'cn.wanghaomiao:JsoupXpath:2.5.1'
+    implementation 'com.google.zxing:core:3.3.0'
+    implementation 'com.orhanobut:logger:2.2.0'
+    implementation 'org.jsoup:jsoup:1.15.3'
+    implementation 'androidx.core:core-ktx:1.10.1'
+    testImplementation "io.github.dokar3:quickjs-kt-jvm:1.0.0-alpha13"
+    testImplementation 'org.nanohttpd:nanohttpd:2.3.1'
+    implementation 'commons-codec:commons-codec:1.17.1'
+
+    // Required -- JUnit 4 framework
+    testImplementation 'junit:junit:4.12'
+    // Optional -- Mockito framework（可选，用于模拟一些依赖对象，以达到隔离依赖的效果）
+    testImplementation 'org.mockito:mockito-core:5.12.0'
+    testImplementation "org.robolectric:robolectric:4.13"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1"
+    //implementation 'wang.harlon.quickjs:wrapper-java:1.0.0'
+    // implementation(ext: 'aar', name: 'quickjs', group: 'fongmi', version: 'release')
+    // api 'wang.harlon.quickjs:wrapper-android:2.0.0'
+
+
 }
