@@ -5,7 +5,7 @@ import android.util.Base64;
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.live.TxtSubscribe;
-import com.github.catvod.utils.okhttp.OkHttpUtil;
+import com.github.catvod.net.OkHttp;
 import com.github.catvod.parser.MixDemo;
 import com.github.catvod.parser.MixWeb;
 
@@ -21,7 +21,7 @@ public class Proxy extends Spider {
             return;
         int port = 9978;
         while (port < 10000) {
-            String resp = OkHttpUtil.string("http://127.0.0.1:" + port + "/proxy?do=ck", null);
+            String resp = OkHttp.string("http://127.0.0.1:" + port + "/proxy?do=ck", null);
             if (resp.equals("ok")) {
                 SpiderDebug.log("Found local server port " + port);
                 localPort = port;
@@ -59,6 +59,8 @@ public class Proxy extends Spider {
                 return MixDemo.loadHtml(params.get("flag"), params.get("url"));
             } else if (what.equals("MixWeb")) {
                 return MixWeb.loadHtml(params.get("flag"), params.get("url"));
+            } else if (what.equals("xunlei8")) {
+                return Xunlei8.loadPic(params.get("pic"));
             }
         } catch (Throwable th) {
             th.printStackTrace();

@@ -1,8 +1,8 @@
 package com.github.catvod.parser;
 
 import com.github.catvod.crawler.SpiderDebug;
+import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.Misc;
-import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.json.JSONObject;
 
@@ -17,6 +17,8 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import okhttp3.Request;
 
 /**
  * 并发解析，直到获得第一个结果
@@ -45,7 +47,10 @@ public class JsonParallel {
                                 String realUrl = reqHeaders.get("url");
                                 reqHeaders.remove("url");
                                 SpiderDebug.log(realUrl + url);
-                                String json = OkHttpUtil.string(realUrl + url, ParseOKTag, reqHeaders);
+                                Request.Builder builder = new Request.Builder().get().url(realUrl + url);
+                                for (String key : reqHeaders.keySet()) builder.addHeader(key, reqHeaders.get(key));
+                                builder.tag(ParseOKTag);
+                                String json = OkHttp.client().newCall(builder.build()).execute().body().string();
                                 JSONObject taskResult = Misc.jsonParse(url, json);
                                 taskResult.put("jxFrom", jxName);
                                 SpiderDebug.log(taskResult.toString());
@@ -63,7 +68,7 @@ public class JsonParallel {
                     try {
                         pTaskResult = completed.get();
                         if (pTaskResult != null) {
-                            OkHttpUtil.cancel(ParseOKTag);
+                            OkHttp.cancel(ParseOKTag);
                             for (int j = 0; j < futures.size(); j++) {
                                 try {
                                     futures.get(j).cancel(true);

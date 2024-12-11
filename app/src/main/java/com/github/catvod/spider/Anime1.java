@@ -4,22 +4,22 @@ import android.content.Context;
 import android.text.TextUtils;
 
 import com.github.catvod.crawler.Spider;
-import com.github.catvod.crawler.SpiderDebug;
+import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.okhttp.OKCallBack;
 import com.github.catvod.utils.okhttp.OkHttpUtil;
-import okhttp3.Call;
-import okhttp3.Response;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,8 +27,9 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.Calendar;
-import java.net.URLDecoder;
+
+import okhttp3.Call;
+import okhttp3.Response;
 
 
 public class Anime1 extends Spider {
@@ -46,7 +47,7 @@ public class Anime1 extends Spider {
     public String homeContent(boolean filter) throws Exception {
         long a = System.currentTimeMillis();
         String srcurl = "https://d1zquzjgwo9yb.cloudfront.net/?_=" + a;
-        String srcOrignstr = OkHttpUtil.string(srcurl, getHeaders3(srcurl));
+        String srcOrignstr = OkHttp.string(srcurl, getHeaders3(srcurl));
         JSONArray srcOrign = new JSONArray(srcOrignstr);
         int srclen = srcOrign.length();
         for (int i = 0; i < srclen; i++) {
@@ -192,7 +193,7 @@ public class Anime1 extends Spider {
          * 播放源配置
          */
         String url = "https://anime1.me/?cat=" + id;
-        Document doc = Jsoup.parse(OkHttpUtil.string(url, getHeaders2(url)));
+        Document doc = Jsoup.parse(OkHttp.string(url, getHeaders2(url)));
         String nextPage = "";
         Map<String, String> vod_play_Order = new TreeMap<>();
         do {
@@ -255,7 +256,7 @@ public class Anime1 extends Spider {
                 }
             }
             if (nextPage != "") {
-                doc = Jsoup.parse(OkHttpUtil.string(nextPage, getHeaders2(nextPage)));
+                doc = Jsoup.parse(OkHttp.string(nextPage, getHeaders2(nextPage)));
             }
         } while (nextPage != "");
         String playList = "";

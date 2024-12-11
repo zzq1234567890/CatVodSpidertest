@@ -4,23 +4,23 @@ import android.content.Context;
 import android.text.TextUtils;
 
 import com.github.catvod.crawler.Spider;
-//import com.github.catvod.net.OkHttp;
-import com.github.catvod.utils.okhttp.OkHttpUtil;
+import com.github.catvod.net.OkHttp;
 
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 /**
  * @author zhixc
@@ -42,8 +42,7 @@ public class SP360 extends Spider {
                 .addHeader("User-Agent", userAgent)
                 .addHeader("Referer", referer)
                 .build();
-        //OkHttpClient okHttpClient = OkHttp.client();
-        OkHttpClient okHttpClient = OkHttpUtil.defaultClient();
+        OkHttpClient okHttpClient = OkHttp.client();
         Response response = okHttpClient.newCall(request).execute();
         if (response.body() == null) return "";
         String content = response.body().string();

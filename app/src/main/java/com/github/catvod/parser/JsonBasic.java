@@ -3,8 +3,8 @@ package com.github.catvod.parser;
 import android.util.Base64;
 
 import com.github.catvod.crawler.SpiderDebug;
+import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.Misc;
-import com.github.catvod.utils.okhttp.OkHttpUtil;
 
 import org.json.JSONObject;
 
@@ -26,7 +26,7 @@ public class JsonBasic {
                         String realUrl = reqHeaders.get("url");
                         reqHeaders.remove("url");
                         SpiderDebug.log(realUrl + url);
-                        String json = OkHttpUtil.string(realUrl + url, reqHeaders);
+                        String json = OkHttp.string(realUrl + url, reqHeaders);
                         JSONObject taskResult = Misc.jsonParse(url, json);
                         if (taskResult == null)
                             continue;

@@ -1,16 +1,11 @@
 package com.github.catvod.spider;
 
+import android.content.Context;
 import android.text.TextUtils;
 
 import com.github.catvod.crawler.Spider;
-//import com.github.catvod.net.OkHttp;
-import com.github.catvod.utils.okhttp.OkHttpUtil;
+import com.github.catvod.net.OkHttp;
 
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
@@ -18,16 +13,21 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-
 import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 /**
  * @author zhixc
@@ -46,8 +46,7 @@ public class SixV extends Spider {
     private final String userAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36";
 
     private String req(String url, Map<String, String> header) {
-        //return OkHttp.string(url, header);
-        return OkHttpUtil.string(url, header);
+        return OkHttp.string(url, header);
     }
 
     private Response req(Request request) throws Exception {
@@ -62,8 +61,7 @@ public class SixV extends Spider {
     }
 
     private OkHttpClient okClient() {
-        //return OkHttp.client();
-        return OkHttpUtil.defaultClient();
+        return OkHttp.client();
     }
 
     private Map<String, String> getHeader() {

@@ -5,7 +5,7 @@ import android.net.Uri;
 
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.utils.okhttp.OkHttpUtil;
+import com.github.catvod.net.OkHttp;
 
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -49,7 +49,7 @@ public class MGTV extends Spider {
                 }
             }
         }
-        String content = OkHttpUtil.string(str3, getHeaders(str3));
+        String content = OkHttp.string(str3, getHeaders(str3));
         JSONObject jSONObject = new JSONObject();
         try {
             JSONArray optJSONArray = new JSONObject(content).optJSONObject("data").optJSONArray("hitDocs");
@@ -85,14 +85,14 @@ public class MGTV extends Spider {
     public String detailContent(List<String> list) throws Exception {
         String vodId = list.get(0);
         String infoUrl = "https://pcweb.api.mgtv.com/player/vinfo?video_id=" + vodId;
-        String infoJson = OkHttpUtil.string(infoUrl, getHeaders(infoUrl));
+        String infoJson = OkHttp.string(infoUrl, getHeaders(infoUrl));
         JSONObject info = new JSONObject(infoJson).getJSONObject("data");
         String pic = info.getString("clip_imgurl2");
 
         int pageSize = 30;
         int page = 1;
         String url = "https://pcweb.api.mgtv.com/episode/list?_support=10000000&version=5.5.35&video_id=" + vodId + "&page=" + page + "&size=" + pageSize + "&allowedRC=1&_support=10000000";
-        String json = OkHttpUtil.string(url, getHeaders(url));
+        String json = OkHttp.string(url, getHeaders(url));
         JSONObject jSONObject = new JSONObject(json).getJSONObject("data");
         JSONObject jSONObject2 = new JSONObject();
         JSONObject optJSONObject = jSONObject.optJSONObject("info");
@@ -123,7 +123,7 @@ public class MGTV extends Spider {
         if (totalPage > page) {
             for (int curPage = 2; curPage <= totalPage; curPage++) {
                 String listUrl = "https://pcweb.api.mgtv.com/episode/list?_support=10000000&version=5.5.35&video_id=" + vodId + "&page=" + curPage + "&size=" + pageSize + "&allowedRC=1&_support=10000000";
-                String resultJson = OkHttpUtil.string(listUrl, getHeaders(listUrl));
+                String resultJson = OkHttp.string(listUrl, getHeaders(listUrl));
                 JSONObject dataObj = new JSONObject(resultJson).getJSONObject("data");
                 JSONArray dataList = dataObj.getJSONArray("list");
                 int first = (curPage - 1) * pageSize + 1;
@@ -161,7 +161,7 @@ public class MGTV extends Spider {
     }
 
     public String homeContent(boolean z) throws Exception {
-        JSONArray optJSONArray = new JSONObject(OkHttpUtil.string("https://pianku.api.mgtv.com/rider/config/platformChannels/v1?platform=msite&abroad=0&_support=10000000", getHeaders("https://pianku.api.mgtv.com/rider/config/platformChannels/v1?platform=msite&abroad=0&_support=10000000"))).optJSONArray("data");
+        JSONArray optJSONArray = new JSONObject(OkHttp.string("https://pianku.api.mgtv.com/rider/config/platformChannels/v1?platform=msite&abroad=0&_support=10000000", getHeaders("https://pianku.api.mgtv.com/rider/config/platformChannels/v1?platform=msite&abroad=0&_support=10000000"))).optJSONArray("data");
         JSONArray jSONArray = new JSONArray();
         for (int i = 0; i < optJSONArray.length(); i++) {
             JSONObject optJSONObject = optJSONArray.optJSONObject(i);
@@ -176,7 +176,7 @@ public class MGTV extends Spider {
         }
         jSONObject2.put("class", jSONArray);
         try {
-            JSONArray optJSONArray2 = new JSONObject(OkHttpUtil.string("https://pianku.api.mgtv.com/rider/list/pcweb/v3?platform=pcweb&channelId=2&pn=1&chargeInfo=&sort=c2", getHeaders("https://pianku.api.mgtv.com/rider/list/pcweb/v3?platform=pcweb&channelId=2&pn=1&chargeInfo=&sort=c2"))).optJSONObject("data").optJSONArray("hitDocs");
+            JSONArray optJSONArray2 = new JSONObject(OkHttp.string("https://pianku.api.mgtv.com/rider/list/pcweb/v3?platform=pcweb&channelId=2&pn=1&chargeInfo=&sort=c2", getHeaders("https://pianku.api.mgtv.com/rider/list/pcweb/v3?platform=pcweb&channelId=2&pn=1&chargeInfo=&sort=c2"))).optJSONObject("data").optJSONArray("hitDocs");
             JSONArray jSONArray2 = new JSONArray();
             for (int i2 = 0; i2 < optJSONArray2.length(); i2++) {
                 JSONObject optJSONObject2 = optJSONArray2.optJSONObject(i2);
@@ -198,7 +198,7 @@ public class MGTV extends Spider {
     }
 
     public String homeVideoContent() throws Exception {
-        JSONArray jSONArray = new JSONObject(OkHttpUtil.string("https://www.mgtv.com/api.php/app/index_video?token=", getHeaders("https://www.mgtv.com/api.php/app/index_video?token="))).getJSONArray("list");
+        JSONArray jSONArray = new JSONObject(OkHttp.string("https://www.mgtv.com/api.php/app/index_video?token=", getHeaders("https://www.mgtv.com/api.php/app/index_video?token="))).getJSONArray("list");
         JSONArray jSONArray2 = new JSONArray();
         for (int i = 0; i < jSONArray.length(); i++) {
             JSONArray jSONArray3 = jSONArray.getJSONObject(i).getJSONArray("vlist");
@@ -248,7 +248,7 @@ public class MGTV extends Spider {
 
     public String searchContent(String str, boolean quick) throws Exception {
         String url = "https://mobileso.bz.mgtv.com/pc/search/v1?allowedRC=1&q=" + str + "&pn=1&pc=10&uid=&corr=1&_support=10000000";
-        String json = OkHttpUtil.string(url, getHeaders(url));
+        String json = OkHttp.string(url, getHeaders(url));
         JSONObject data = new JSONObject(json).getJSONObject("data");
         JSONArray contents = data.getJSONArray("contents");
         JSONArray items = new JSONArray();

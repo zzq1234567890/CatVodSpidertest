@@ -1,13 +1,11 @@
 package com.github.catvod.spider;
 
+import android.content.Context;
 import android.text.TextUtils;
 
 import com.github.catvod.crawler.Spider;
-import com.github.catvod.utils.okhttp.OkHttpUtil;
+import com.github.catvod.net.OkHttp;
 
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
@@ -16,12 +14,16 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 
 /**
@@ -40,7 +42,7 @@ public class PiaoHua extends Spider {
                 .get()
                 .url(targetUrl)
                 .build();
-        OkHttpClient okHttpClient = OkHttpUtil.defaultClient();
+        OkHttpClient okHttpClient = OkHttp.client();
         Response response = okHttpClient.newCall(request).execute();
         if (response.body() == null) return "";
         byte[] bytes = response.body().bytes();

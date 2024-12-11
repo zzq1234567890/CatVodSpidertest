@@ -2,18 +2,19 @@ package com.github.catvod.spider;
 
 import android.content.Context;
 import android.net.Uri;
+
 import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.SpiderDebug;
-import com.github.catvod.utils.okhttp.OkHttpUtil;
+import com.github.catvod.net.OkHttp;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 public class IQIYI extends Spider {
     protected JSONObject a;
@@ -56,7 +57,7 @@ public class IQIYI extends Spider {
             }
             str3 = str3 + "&three_category_id=" + iqiyi.join(",", arrayList);
         }
-        String h = OkHttpUtil.string(str3, getHeaders(str3));
+        String h = OkHttp.string(str3, getHeaders(str3));
         JSONObject jSONObject = new JSONObject();
         try {
             JSONArray optJSONArray = new JSONObject(h).optJSONObject("data").optJSONArray("list");
@@ -101,7 +102,7 @@ public class IQIYI extends Spider {
 
     public String detailContent(List<String> list) throws Exception {
         String url = "https://pcw-api.iqiyi.com" + list.get(0);
-        JSONObject jSONObject = new JSONObject(OkHttpUtil.string(url, getHeaders(url))).getJSONObject("data");
+        JSONObject jSONObject = new JSONObject(OkHttp.string(url, getHeaders(url))).getJSONObject("data");
         JSONObject jSONObject2 = new JSONObject();
         JSONObject optJSONObject = jSONObject.optJSONArray("epsodelist") != null ? jSONObject.optJSONArray("epsodelist").optJSONObject(0) : jSONObject;
         jSONObject2.put("vod_id", list.get(0));
@@ -169,7 +170,7 @@ public class IQIYI extends Spider {
     public String homeContent(boolean z) throws Exception {
         IQIYI iqiyi = this;
         String str = "https://pcw-api.iqiyi.com/search/video/videolists?channel_id=2&is_purchase=&mode=24&pageNum=1&pageSize=24&data_type=1&site=iqiyi";
-        String h = OkHttpUtil.string(str, iqiyi.getHeaders(str));
+        String h = OkHttp.string(str, iqiyi.getHeaders(str));
         JSONObject jSONObject = new JSONObject();
         jSONObject.put("class", iqiyi.xr);
         if (z) {
@@ -212,7 +213,7 @@ public class IQIYI extends Spider {
     }
 
     public String homeVideoContent() throws Exception {
-        JSONArray jSONArray = new JSONObject(OkHttpUtil.string("https://pcw-api.iqiyi.com/api.php/app/index_video?token=", getHeaders("https://pcw-api.iqiyi.com/api.php/app/index_video?token="))).getJSONArray("list");
+        JSONArray jSONArray = new JSONObject(OkHttp.string("https://pcw-api.iqiyi.com/api.php/app/index_video?token=", getHeaders("https://pcw-api.iqiyi.com/api.php/app/index_video?token="))).getJSONArray("list");
         JSONArray jSONArray2 = new JSONArray();
         for (int i = 0; i < jSONArray.length(); i++) {
             JSONArray jSONArray3 = jSONArray.getJSONObject(i).getJSONArray("vlist");
@@ -263,7 +264,7 @@ public class IQIYI extends Spider {
 
     public String searchContent(String str, boolean quick) throws Exception {
         String url = "https://search.video.iqiyi.com/o?if=html5&key=" + str + "&pageNum=1&pos=1&pageSize=20";
-        String json = OkHttpUtil.string(url, getHeaders(url));
+        String json = OkHttp.string(url, getHeaders(url));
         JSONArray optJSONArray = new JSONObject(json).optJSONObject("data").optJSONArray("docinfos");
 
         JSONArray videos = new JSONArray();
