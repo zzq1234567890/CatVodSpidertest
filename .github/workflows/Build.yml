@@ -30,10 +30,12 @@ jobs:
         
     - name: Clone project
       run: |
-        rm -rf jar/custom_spider.jar
+        rm -rf json/index.json
+        rm -rf jar/custom_spider.jar    
         git clone --recurse-submodules https://github.com/lushunming/AndroidCatVodSpider project
         sed -i 's/mirrors.cloud.tencent.com\gradle/services.gradle.org\/distributions/g' project/gradle/wrapper/gradle-wrapper.properties        
-      
+        mv ./project/json/index.json ./json/index.json
+        
     - name: Customize Spider
       working-directory: ./project
       run: |  
