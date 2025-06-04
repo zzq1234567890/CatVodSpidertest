@@ -1,5 +1,5 @@
 {
-  "spider": "https://androidcatvodspider.netlify.app/jar/custom_spider.jar;md5;1313d67206e3f22317acc00838701e76",
+  "spider": "https://androidcatvodspider.netlify.app/jar/custom_spider.jar;md5;4a9814b359e0f39cf4613cd801871c06",
   "lives": [
     {
       "name": "电视直播",
@@ -72,6 +72,15 @@
       "name": "盘他|139Pan",
       "type": 3,
       "api": "csp_PanTa",
+      "searchable": 1,
+      "changeable": 1,
+      "ext": {}
+    },
+    {
+      "key": "LeiJing",
+      "name": "雷鲸|189Pan",
+      "type": 3,
+      "api": "csp_LeiJing",
       "searchable": 1,
       "changeable": 1,
       "ext": {}
