@@ -77,6 +77,9 @@ public class OkHttp {
     public static String getLocation(String url, Map<String, String> header) throws IOException {
         return getLocation(client().newBuilder().followRedirects(false).followSslRedirects(false).build().newCall(new Request.Builder().url(url).headers(Headers.of(header)).build()).execute().headers().toMultimap());
     }
+    public static Map<String, List<String>>  getLocationHeader(String url, Map<String, String> header) throws IOException {
+        return client().newBuilder().followRedirects(false).followSslRedirects(false).build().newCall(new Request.Builder().url(url).headers(Headers.of(header)).build()).execute().headers().toMultimap();
+    }
 
     public static String getLocation(Map<String, List<String>> headers) {
         if (headers == null) return null;

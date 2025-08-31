@@ -38,14 +38,14 @@ class CompileJSTest {
     @Throws(Exception::class)
     fun homeContent(): Unit {
 
-        val content = OkHttp.string("https://androidcatvodspider.pages.dev/json/js/jpyy2.js")/* val bytes = context!!.compileModule(content, "newvision.js")
+        val content = OkHttp.string("https://androidcatvodspider.netlify.app/json/js/jpyy2.js")/* val bytes = context!!.compileModule(content, "newvision.js")
          val result = "//bb" + Util.base64Encode(bytes)*/
 
         val scope = CoroutineScope(Dispatchers.Default)
 
         fun startTask() = runBlocking {
             launch {
-                val json = Json.toJson(ImmutableMap.of("url", "https://androidcatvodspider.pages.dev/json/js/jpyy2.js"));
+                val json = Json.toJson(ImmutableMap.of("url", "https://androidcatvodspider.netlify.app/json/js/jpyy2.js"));
                 quickJs {
                     val helloModuleCode = """
                         export function greeting(to) {

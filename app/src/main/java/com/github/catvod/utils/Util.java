@@ -11,18 +11,15 @@ import android.view.ViewGroup;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-
 import com.github.catvod.spider.Init;
+import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigInteger;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -349,6 +346,51 @@ public class Util {
             hexString.append(hex);
         }
         return hexString.toString();
+    }
+
+    public static String sha256Hex(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] messageDigest = md.digest(input.getBytes(Charset.defaultCharset()));
+            return bytesToHex(messageDigest);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static String unicodeToString(String unicode) {
+        if (StringUtils.isBlank(unicode)) {
+            return unicode;
+        }
+
+        final int len = unicode.length();
+        StringBuilder sb = new StringBuilder(len);
+        int i;
+        int pos = 0;
+        while ((i = StringUtils.indexOfIgnoreCase(unicode, "\\u", pos)) != -1) {
+            sb.append(unicode, pos, i);//写入Unicode符之前的部分
+            pos = i;
+            if (i + 5 < len) {
+                char c;
+                try {
+                    c = (char) Integer.parseInt(unicode.substring(i + 2, i + 6), 16);
+                    sb.append(c);
+                    pos = i + 6;//跳过整个Unicode符
+                } catch (NumberFormatException e) {
+                    //非法Unicode符，跳过
+                    sb.append(unicode, pos, i + 2);//写入"\\u"
+                    pos = i + 2;
+                }
+            } else {
+                //非Unicode符，结束
+                break;
+            }
+        }
+
+        if (pos < len) {
+            sb.append(unicode, pos, len);
+        }
+        return sb.toString();
     }
 
 

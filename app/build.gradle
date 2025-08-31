@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'ru.cleverpumpkin.proguard-dictionaries-generator'
     id 'org.jetbrains.kotlin.android'
+
 }
 java {
     toolchain {
@@ -47,6 +48,12 @@ android {
         jvmTarget = "11"
 
     }
+    packagingOptions {
+
+        exclude 'META-INF/*'
+
+    }
+
 
     configurations.configureEach {
         resolutionStrategy {
@@ -74,7 +81,17 @@ dependencies {
     // Optional -- Mockito framework（可选，用于模拟一些依赖对象，以达到隔离依赖的效果）
     testImplementation 'org.mockito:mockito-core:5.12.0'
     testImplementation "org.robolectric:robolectric:4.13"
+    testImplementation 'cn.hutool:hutool-all:5.8.26'
+
+
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1"
+    // https://mvnrepository.com/artifact/com.sun.net.httpserver/http
+ /*   implementation(files("libs/sun-common-server.jar"))
+    implementation("com.sun.net.httpserver:http:20070405")*/
+    //  implementation("com.hibegin:simplewebserver:0.1.15")
+    //implementation("com.github.codeborne.klite:klite-server:1.7.0")
+
+
     //implementation 'wang.harlon.quickjs:wrapper-java:1.0.0'
     // implementation(ext: 'aar', name: 'quickjs', group: 'fongmi', version: 'release')
     // api 'wang.harlon.quickjs:wrapper-android:2.0.0'

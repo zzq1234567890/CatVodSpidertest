@@ -1,17 +1,12 @@
 package com.github.catvod.utils;
 
-import android.util.Base64;
-
 import org.apache.commons.lang3.StringUtils;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 
 public class AESEncryption {
 
@@ -19,7 +14,7 @@ public class AESEncryption {
     public static final String CBC_PKCS_7_PADDING = "AES/CBC/PKCS7Padding";
     public static final String ECB_PKCS_7_PADDING = "AES/ECB/PKCS5Padding";
 
-    public static String encrypt(String word, String keyString, String ivString,String trans) {
+    public static String encrypt(String word, String keyString, String ivString, String trans) {
         try {
             byte[] keyBytes = keyString.getBytes("UTF-8");
             SecretKeySpec keySpec = new SecretKeySpec(keyBytes, "AES");
@@ -28,10 +23,10 @@ public class AESEncryption {
             IvParameterSpec ivSpec = new IvParameterSpec(ivBytes);
 
             Cipher cipher = Cipher.getInstance(trans);
-            if(StringUtils.isAllBlank(ivString)){
+            if (StringUtils.isAllBlank(ivString)) {
                 cipher.init(Cipher.ENCRYPT_MODE, keySpec);
 
-            }else{
+            } else {
                 cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
 
             }
@@ -45,7 +40,7 @@ public class AESEncryption {
         }
     }
 
-    public static String decrypt(String word,String keyString,String ivString,String trans) {
+    public static String decrypt(String word, String keyString, String ivString, String trans) {
         try {
             byte[] keyBytes = keyString.getBytes("UTF-8");
             SecretKeySpec keySpec = new SecretKeySpec(keyBytes, "AES");
@@ -54,10 +49,10 @@ public class AESEncryption {
             IvParameterSpec ivSpec = new IvParameterSpec(ivBytes);
 
             Cipher cipher = Cipher.getInstance(trans);
-            if(StringUtils.isAllBlank(ivString)){
+            if (StringUtils.isAllBlank(ivString)) {
                 cipher.init(Cipher.DECRYPT_MODE, keySpec);
 
-            }else{
+            } else {
                 cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
 
             }
@@ -70,7 +65,6 @@ public class AESEncryption {
             return null;
         }
     }
-
 
 
     private static byte[] hexStringToByteArray(String hexString) {

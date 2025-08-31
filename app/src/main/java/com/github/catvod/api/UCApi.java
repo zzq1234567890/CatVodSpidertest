@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.bean.uc.Cache;
@@ -26,25 +25,23 @@ import com.github.catvod.spider.Init;
 import com.github.catvod.spider.Proxy;
 import com.github.catvod.utils.*;
 import com.google.gson.Gson;
-
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class UCApi {
     private String apiUrl = "https://pc-api.uc.cn/1/clouddrive/";
     private String cookie = "";
+    private String cookieToken = "";
     private String ckey = "";
     private Map<String, Map<String, Object>> shareTokenCache = new HashMap<>();
     private String pr = "pr=UCBrowser&fr=pc";
@@ -54,11 +51,201 @@ public class UCApi {
     private final String saveDirName = "TV";
     private boolean isVip = false;
     private final Cache cache;
+    private final Cache tokenCache;
     private ScheduledExecutorService service;
 
 
     private AlertDialog dialog;
     private String serviceTicket;
+    private UCTokenHandler qrCodeHandler;
+
+    private Map<String, String> getHeaders() {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("User-Agent", "Mozilla/5.0 (Linux; Android 8.0.0; SM-G955U Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36");
+        headers.put("Referer", "https://drive.uc.cn");
+        headers.put("Content-Type", "application/json");
+        headers.put("Cookie", cookie);
+        //headers.put("Host", "drive-pc.quark.cn");
+        return headers;
+    }
+
+    private Map<String, String> getWebHeaders() {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("User-Agent", "Mozilla/5.0 (Linux; Android 8.0.0; SM-G955U Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36");
+        headers.put("Referer", "https://drive.uc.cn");
+        headers.put("Cookie", cookie);
+        return headers;
+    }
+
+    /* cookieToken = qrCodeHandler.startUC_TOKENScan();
+             SpiderDebug.log("扫码登录获取到的cookieToken: " + cookieToken);*/
+
+
+    private UCApi() {
+        Init.checkPermission();
+        qrCodeHandler = new UCTokenHandler();
+        cache = Cache.objectFrom(Path.read(getCache()));
+        tokenCache = Cache.objectFrom(Path.read(qrCodeHandler.getCache()));
+
+        this.cookieToken = tokenCache.getUser().getCookie();
+        SpiderDebug.log("UC初始化获取到的cookieToken: " + cookieToken);
+    }
+
+    private static class Loader {
+        static volatile UCApi INSTANCE = new UCApi();
+    }
+
+    public static UCApi get() {
+        return UCApi.Loader.INSTANCE;
+    }
+
+    //从配置中获取cookie
+    public void setCookie(String token) throws Exception {
+        if (StringUtils.isNoneBlank(token)) {
+            this.cookie = token;
+            initUserInfo();
+
+        }
+    }
+
+    /**
+     * 初始化UC信息
+     */
+    private void initUserInfo() {
+        try {
+            SpiderDebug.log("uc initUserInfo...");
+
+            //extend没有cookie，从缓存中获取
+            if (StringUtils.isAllBlank(cookie)) {
+                SpiderDebug.log("uc cookie from ext is empty...");
+                cookie = cache.getUser().getCookie();
+            }
+            //获取到cookie，初始化uc，并且把cookie缓存一次
+            if (StringUtils.isNoneBlank(cookie) && cookie.contains("__pus")) {
+                SpiderDebug.log(" initUc ...");
+                initUc(this.cookie);
+                cache.setUser(User.objectFrom(this.cookie));
+                return;
+            }
+
+            //没有cookie，也没有serviceTicket，抛出异常，提示用户重新登录
+            if (StringUtils.isAllBlank(cookie) && StringUtils.isAllBlank(serviceTicket)) {
+                SpiderDebug.log("uccookie为空");
+                throw new RuntimeException("uccookie为空");
+            }
+
+            String token = serviceTicket;
+            OkResult result = OkHttp.get("https://drive.uc.cn/account/info?st=" + token + "", new HashMap<>(), getWebHeaders());
+            Map json = Json.parseSafe(result.getBody(), Map.class);
+            if (json.get("success").equals(Boolean.TRUE)) {
+                List<String> cookies = result.getResp().get("set-Cookie");
+                List<String> cookieList = new ArrayList<>();
+                for (String cookie : cookies) {
+                    cookieList.add(cookie.split(";")[0]);
+                }
+                this.cookie += TextUtils.join(";", cookieList);
+
+                cache.setUser(User.objectFrom(this.cookie));
+                if (cache.getUser().getCookie().isEmpty()) throw new Exception(this.cookie);
+                initUc(this.cookie);
+            }
+
+        } catch (Exception e) {
+            cache.getUser().clean();
+            e.printStackTrace();
+            stopService();
+            startFlow();
+        } finally {
+            while (cache.getUser().getCookie().isEmpty()) SystemClock.sleep(250);
+        }
+    }
+
+    public void initUc(String cookie) throws Exception {
+        this.ckey = Util.MD5(cookie);
+        this.cookie = cookie;
+        this.isVip = getVip();
+    }
+
+
+    public File getCache() {
+        return Path.tv("uc");
+    }
+
+
+    public Vod getVod(ShareData shareData) throws Exception {
+        getShareToken(shareData);
+        List<Item> files = new ArrayList<>();
+        List<Item> subs = new ArrayList<>();
+        List<Map<String, Object>> listData = listFile(1, shareData, files, subs, shareData.getShareId(), shareData.getFolderId(), 1);
+
+        List<String> playFrom = UCApi.get().getPlayFormatList();
+        List<String> playFromtmp = new ArrayList<>();
+        playFromtmp.add("uc原画");
+        for (String s : playFrom) {
+            playFromtmp.add("uc" + s);
+        }
+        List<String> playUrl = new ArrayList<>();
+
+        if (files.isEmpty()) {
+            return null;
+        }
+        for (int i = 0; i < files.get(files.size() - 1).getShareIndex(); i++) {
+            for (int index = 0; index < playFromtmp.size(); index++) {
+                List<String> vodItems = new ArrayList<>();
+                for (Item video_item : files) {
+                    if (video_item.getShareIndex() == i + 1) {
+                        vodItems.add(video_item.getEpisodeUrl("电影"));// + findSubs(video_item.getName(), subs));
+                    }
+                }
+                playUrl.add(TextUtils.join("#", vodItems));
+            }
+        }
+
+
+        Vod vod = new Vod();
+        vod.setVodId("");
+        vod.setVodContent("");
+        vod.setVodPic("");
+        vod.setVodName("");
+        vod.setVodPlayUrl(TextUtils.join("$$$", playUrl));
+        vod.setVodPlayFrom(TextUtils.join("$$$", playFromtmp));
+        vod.setTypeName("uc云盘");
+        return vod;
+    }
+
+    public String playerContent(String[] split, String flag) throws Exception {
+        SpiderDebug.log("flag:" + flag);
+        String fileId = split[0], fileToken = split[1], shareId = split[2], stoken = split[3];
+        String playUrl = "";
+        if (flag.contains("uc原画")) {
+            playUrl = this.getDownload(shareId, stoken, fileId, fileToken, true);
+        } else {
+            playUrl = this.getLiveTranscoding(shareId, stoken, fileId, fileToken, flag);
+        }
+        SpiderDebug.log("origin playUrl:" + playUrl);
+        Map<String, String> header = getHeaders();
+        header.remove("Host");
+        header.remove("Content-Type");
+
+        //UCTV 可以直接播放，不需要代理
+        if (testVideo(playUrl)) {
+            SpiderDebug.log("UCTV 可以直接播放，不需要代理" );
+
+            return Result.get().url(playUrl).string();
+        }
+        return Result.get().url(proxyVideoUrl(playUrl, header)).octet().header(header).string();
+    }
+
+    private boolean testVideo(String url) {
+
+        OkResult okResult1 = OkHttp.get(url, new HashMap<>(), Map.of("Range", "bytes=0-0"));
+        return okResult1.getCode() == 206;
+
+    }
+
+    private String proxyVideoUrl(String url, Map<String, String> header) {
+        return String.format(Proxy.getUrl() + "?do=uc&type=video&url=%s&header=%s", Util.base64Encode(url.getBytes(Charset.defaultCharset())), Util.base64Encode(Json.toJson(header).getBytes(Charset.defaultCharset())));
+    }
 
     public Object[] proxyVideo(Map<String, String> params) throws Exception {
         String url = Util.base64Decode(params.get("url"));
@@ -120,116 +307,6 @@ public class UCApi {
         return new Object[]{result.getCode(), contentType, new ByteArrayInputStream(m3u8Str.getBytes(Charset.defaultCharset())), respHeaders};
     }
 
-    private static class Loader {
-        static volatile UCApi INSTANCE = new UCApi();
-    }
-
-    public static UCApi get() {
-        return UCApi.Loader.INSTANCE;
-    }
-
-    public void setCookie(String token) throws Exception {
-        if (StringUtils.isNoneBlank(token)) {
-            this.cookie = token;
-            initUserInfo();
-        }
-    }
-
-    private Map<String, String> getHeaders() {
-        Map<String, String> headers = new HashMap<>();
-        headers.put("User-Agent", "Mozilla/5.0 (Linux; Android 8.0.0; SM-G955U Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36");
-        headers.put("Referer", "https://drive.uc.cn");
-        headers.put("Content-Type", "application/json");
-        headers.put("Cookie", cookie);
-        //headers.put("Host", "drive-pc.quark.cn");
-        return headers;
-    }
-
-    private Map<String, String> getWebHeaders() {
-        Map<String, String> headers = new HashMap<>();
-        headers.put("User-Agent", "Mozilla/5.0 (Linux; Android 8.0.0; SM-G955U Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36");
-        headers.put("Referer", "https://drive.uc.cn");
-        headers.put("Cookie", cookie);
-        return headers;
-    }
-
-    public void initUc(String cookie) throws Exception {
-        this.ckey = Util.MD5(cookie);
-        this.cookie = cookie;
-        this.isVip = getVip();
-    }
-
-    private UCApi() {
-        Init.checkPermission();
-
-        cache = Cache.objectFrom(Path.read(getCache()));
-    }
-
-    public File getCache() {
-        return Path.tv("uc");
-    }
-
-    public Vod getVod(ShareData shareData) throws Exception {
-        getShareToken(shareData);
-        List<Item> files = new ArrayList<>();
-        List<Item> subs = new ArrayList<>();
-        List<Map<String, Object>> listData = listFile(1, shareData, files, subs, shareData.getShareId(), shareData.getFolderId(), 1);
-
-        List<String> playFrom = UCApi.get().getPlayFormatList();
-        List<String> playFromtmp = new ArrayList<>();
-        playFromtmp.add("uc原画");
-        for (String s : playFrom) {
-            playFromtmp.add("uc" + s);
-        }
-        List<String> playUrl = new ArrayList<>();
-
-        if (files.isEmpty()) {
-            return null;
-        }
-        for (int i = 0; i < files.get(files.size() - 1).getShareIndex(); i++) {
-            for (int index = 0; index < playFromtmp.size(); index++) {
-                List<String> vodItems = new ArrayList<>();
-                for (Item video_item : files) {
-                    if (video_item.getShareIndex() == i + 1) {
-                        vodItems.add(video_item.getEpisodeUrl("电影"));// + findSubs(video_item.getName(), subs));
-                    }
-                }
-                playUrl.add(TextUtils.join("#", vodItems));
-            }
-        }
-
-
-        Vod vod = new Vod();
-        vod.setVodId("");
-        vod.setVodContent("");
-        vod.setVodPic("");
-        vod.setVodName("");
-        vod.setVodPlayUrl(TextUtils.join("$$$", playUrl));
-        vod.setVodPlayFrom(TextUtils.join("$$$", playFromtmp));
-        vod.setTypeName("uc云盘");
-        return vod;
-    }
-
-    public String playerContent(String[] split, String flag) throws Exception {
-        SpiderDebug.log("flag:" + flag);
-        String fileId = split[0], fileToken = split[1], shareId = split[2], stoken = split[3];
-        String playUrl = "";
-        if (flag.contains("uc原画")) {
-            playUrl = this.getDownload(shareId, stoken, fileId, fileToken, true);
-        } else {
-            playUrl = this.getLiveTranscoding(shareId, stoken, fileId, fileToken, flag);
-        }
-        SpiderDebug.log("origin playUrl:" + playUrl);
-        Map<String, String> header = getHeaders();
-        header.remove("Host");
-        header.remove("Content-Type");
-        return Result.get().url(proxyVideoUrl(playUrl, header)).octet().header(header).string();
-    }
-
-    private String proxyVideoUrl(String url, Map<String, String> header) {
-        return String.format(Proxy.getUrl() + "?do=uc&type=video&url=%s&header=%s", Util.base64Encode(url.getBytes(Charset.defaultCharset())), Util.base64Encode(Json.toJson(header).getBytes(Charset.defaultCharset())));
-    }
-
     /**
      * @param url
      * @param params get 参数
@@ -273,54 +350,6 @@ public class UCApi {
         return okResult.getBody();
     }
 
-    private void initUserInfo() {
-        try {
-            SpiderDebug.log("uc initUserInfo...");
-
-            //extend没有cookie，从缓存中获取
-            if (StringUtils.isAllBlank(cookie)) {
-                SpiderDebug.log("uc cookie from ext is empty...");
-                cookie = cache.getUser().getCookie();
-            }
-            //获取到cookie，初始化uc，并且把cookie缓存一次
-            if (StringUtils.isNoneBlank(cookie) && cookie.contains("__pus")) {
-                SpiderDebug.log(" initUc ...");
-                initUc(this.cookie);
-                cache.setUser(User.objectFrom(this.cookie));
-                return;
-            }
-
-            //没有cookie，也没有serviceTicket，抛出异常，提示用户重新登录
-            if (StringUtils.isAllBlank(cookie) && StringUtils.isAllBlank(serviceTicket)) {
-                SpiderDebug.log("uccookie为空");
-                throw new RuntimeException("uccookie为空");
-            }
-
-            String token = serviceTicket;
-            OkResult result = OkHttp.get("https://drive.uc.cn/account/info?st=" + token + "", new HashMap<>(), getWebHeaders());
-            Map json = Json.parseSafe(result.getBody(), Map.class);
-            if (json.get("success").equals(Boolean.TRUE)) {
-                List<String> cookies = result.getResp().get("set-Cookie");
-                List<String> cookieList = new ArrayList<>();
-                for (String cookie : cookies) {
-                    cookieList.add(cookie.split(";")[0]);
-                }
-                this.cookie += TextUtils.join(";", cookieList);
-
-                cache.setUser(User.objectFrom(this.cookie));
-                if (cache.getUser().getCookie().isEmpty()) throw new Exception(this.cookie);
-                initUc(this.cookie);
-            }
-
-        } catch (Exception e) {
-            cache.getUser().clean();
-            e.printStackTrace();
-            stopService();
-            startFlow();
-        } finally {
-            while (cache.getUser().getCookie().isEmpty()) SystemClock.sleep(250);
-        }
-    }
 
     /**
      * 获取二维码登录的令牌
@@ -375,7 +404,7 @@ public class UCApi {
             params.setMargins(margin, margin, margin, margin);
             EditText input = new EditText(Init.context());
             frame.addView(input, params);
-            dialog = new AlertDialog.Builder(Init.getActivity()).setTitle("请输入UC cookie").setView(frame).setNeutralButton("QRCode", (dialog, which) -> onNeutral()).setNegativeButton(android.R.string.cancel, null).setPositiveButton(android.R.string.ok, (dialog, which) -> onPositive(input.getText().toString())).show();
+            dialog = new AlertDialog.Builder(Init.getActivity()).setTitle("请输入UC cookie").setView(frame).setNeutralButton("UC二维码", (dialog, which) -> onNeutral()).setNegativeButton(android.R.string.cancel, null).setPositiveButton(android.R.string.ok, (dialog, which) -> onPositive(input.getText().toString())).show();
         } catch (Exception ignored) {
         }
     }
@@ -681,10 +710,19 @@ public class UCApi {
             if (saveFileId == null) return null;
             this.saveFileIdCaches.put(fileId, saveFileId);
         }
-        Map<String, Object> down = Json.parseSafe(api("file/download?" + this.pr + "&uc_param_str=", Collections.emptyMap(), Map.of("fids", List.of(this.saveFileIdCaches.get(fileId))), 0, "POST"), Map.class);
-        if (down.get("data") != null) {
-            return ((List<Map<String, Object>>) down.get("data")).get(0).get("download_url").toString();
+
+        //token不为空
+        if (StringUtils.isNoneBlank(cookieToken)) {
+            SpiderDebug.log("cookieToken不为空: " + cookieToken + ";开始下载");
+            return qrCodeHandler.download(cookieToken, this.saveFileIdCaches.get(fileId));
+        } else {
+            Map<String, Object> down = Json.parseSafe(api("file/download?" + this.pr + "&uc_param_str=", Collections.emptyMap(), Map.of("fids", List.of(this.saveFileIdCaches.get(fileId))), 0, "POST"), Map.class);
+            if (down.get("data") != null) {
+                return ((List<Map<String, Object>>) down.get("data")).get(0).get("download_url").toString();
+            }
         }
+
+
         return null;
     }
 

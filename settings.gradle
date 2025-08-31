@@ -1,6 +1,6 @@
 pluginManagement {
     repositories {
-        mavenCentral()
+
         maven { url 'https://maven.aliyun.com/repository/public/' }
         maven { url 'https://maven.aliyun.com/repository/google/' }
         maven { url 'https://maven.aliyun.com/repository/gradle-plugin/' }
@@ -9,6 +9,7 @@ pluginManagement {
         maven { url 'https://maven.aliyun.com/repository/mapr-public/' }
         gradlePluginPortal()
         google()
+        mavenCentral()
 
         maven { url "https://plugins.gradle.org/m2/" }
         maven { url "https://www.jitpack.io" }
@@ -17,7 +18,7 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        mavenCentral()
+
         maven { url 'https://maven.aliyun.com/repository/public/' }
         maven { url 'https://maven.aliyun.com/repository/google/' }
         maven { url 'https://maven.aliyun.com/repository/gradle-plugin/' }
@@ -25,6 +26,7 @@ dependencyResolutionManagement {
         maven { url 'https://maven.aliyun.com/repository/central/'}
         maven { url 'https://maven.aliyun.com/repository/mapr-public/' }
         google()
+        mavenCentral()
         maven { url "https://www.jitpack.io" }
     }
 }

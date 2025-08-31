@@ -10,6 +10,9 @@ public class User {
     @SerializedName("cookie")
     private String cookie;
 
+
+
+
     public String getCookie() {
         return cookie;
     }

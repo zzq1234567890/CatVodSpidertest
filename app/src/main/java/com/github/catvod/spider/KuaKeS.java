@@ -52,7 +52,7 @@ public class KuaKeS extends Cloud {
     public String homeContent(boolean filter) {
         List<Class> classes = new ArrayList<>();
         Document doc = Jsoup.parse(OkHttp.string(siteUrl, getHeader()));
-        Elements elements = doc.select(" #J_topNav  a");
+        Elements elements = doc.select(" #J_topNavMb  a");
         for (Element e : elements) {
             String url = e.attr("href");
             String name = e.text();

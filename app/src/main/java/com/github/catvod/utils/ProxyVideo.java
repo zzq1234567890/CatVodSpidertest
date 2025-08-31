@@ -2,22 +2,32 @@ package com.github.catvod.utils;
 
 import android.os.SystemClock;
 import android.text.TextUtils;
+
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.spider.Proxy;
 import com.google.gson.Gson;
-import okhttp3.Response;
+
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import okhttp3.Response;
 
 public class ProxyVideo {
 
     private static final String GO_SERVER = "http://127.0.0.1:7777/";
+    //线程数4
+    private static final int THREAD_NUM = Runtime.getRuntime().availableProcessors() * 2;
+    private static Map<String, Object[]> infos = new HashMap<>();
+
 
     public static String buildCommonProxyUrl(String url, Map<String, String> headers) {
         return Proxy.getUrl() + "?do=proxy&url=" + Util.base64Encode(url.getBytes(Charset.defaultCharset())) + "&header=" + Util.base64Encode((new Gson().toJson(headers)).getBytes(Charset.defaultCharset()));
@@ -54,10 +64,16 @@ public class ProxyVideo {
         SpiderDebug.log(" ++proxy res code:" + response.code());
         SpiderDebug.log(" ++proxy res header:" + Json.toJson(response.headers()));
         //    SpiderDebug.log(" ++proxy res data:" + Json.toJson(response.body()));
-        String contentType = response.headers().get("Content-Type");
+
+
+        String contentType = StringUtils.isAllBlank(response.headers().get("Content-Type")) ? response.headers().get("content-type") : response.headers().get("Content-Type");
         String contentDisposition = response.headers().get("Content-Disposition");
-        if (contentDisposition != null) contentType = getMimeType(contentDisposition);
+        if (contentDisposition != null && StringUtils.isAllBlank(contentType)) {
+            contentType = getMimeType(contentDisposition);
+        }
         Map<String, String> respHeaders = new HashMap<>();
+
+
        /* respHeaders.put("Access-Control-Allow-Credentials", "true");
         respHeaders.put("Access-Control-Allow-Origin", "*");*/
 
@@ -70,7 +86,26 @@ public class ProxyVideo {
         return new Object[]{response.code(), contentType, response.body().byteStream(), respHeaders};
     }
 
-    private static String getMimeType(String contentDisposition) {
+
+
+    public static Object[] proxyMultiThread(String url, Map<String, String> headers) {
+        return DownloadMT.INSTANCE.proxyMultiThread(url, headers);
+    }
+
+
+    public static Map<String, String> parseRange(String range) {
+        SpiderDebug.log("parseRange:" + range);
+        if (StringUtils.isNoneBlank(range)) {
+
+            String[] ranges = StringUtils.split(range.replace("bytes=", ""), "-");
+            String start = ranges[0];
+            String end = ranges.length > 1 ? ranges[1] : "";
+            return Map.of("start", start, "end", end);
+        }
+        return null;
+    }
+
+    public static String getMimeType(String contentDisposition) {
         if (contentDisposition.endsWith(".mp4")) {
             return "video/mp4";
         } else if (contentDisposition.endsWith(".webm")) {
@@ -101,4 +136,9 @@ public class ProxyVideo {
             return null;
         }
     }
+
+    /**
+     * 视频range
+     */
+
 }

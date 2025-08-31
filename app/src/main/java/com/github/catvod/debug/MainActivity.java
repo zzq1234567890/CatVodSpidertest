@@ -46,7 +46,7 @@ public class MainActivity extends Activity {
         Logger.addLogAdapter(new AndroidLogAdapter());
         executor = Executors.newCachedThreadPool();
         executor.execute(this::initSpider);
-        //String content = OkHttp.string("https://androidcatvodspider.pages.dev/json/js/newvision.js");
+        //String content = OkHttp.string("https://androidcatvodspider.netlify.app/json/js/newvision.js");
        // byte[] bytes = context.compileModule(content, "newvision.js");
        // String result = "//bb" + Util.base64Encode(bytes);
     }

@@ -7,7 +7,7 @@ import com.github.catvod.crawler.Spider;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.AESEncryption;
 import com.github.catvod.utils.Util;
-
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -15,6 +15,7 @@ import org.jsoup.select.Elements;
 
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -22,8 +23,8 @@ import java.util.regex.Pattern;
 
 public class NCat extends Spider {
 
-    private static final String siteUrl = "https://www.ncat3.com:51111";
-    private static final String picUrl = "https://61.147.93.252:15002";
+    private static final String siteUrl = "https://www.ncat3.app";
+    private static final String picUrl = "https://vres.wbadl.cn";
     private static final String cateUrl = siteUrl + "/show/";
     private static final String detailUrl = siteUrl + "/detail/";
     private static final String searchUrl = siteUrl + "/search?k=";
@@ -49,7 +50,7 @@ public class NCat extends Spider {
             try {
                 String pic = element.select("img").last().attr("data-original");
                 String url = element.select("a").attr("href");
-                String name = element.select("img").attr("title");
+                String name = element.select(".v-item-title").text().replace("可可影视-kekys.com", "").trim();
                 if (!pic.startsWith("http")) {
                     pic = picUrl + pic;
                 }
@@ -71,7 +72,7 @@ public class NCat extends Spider {
             try {
                 String pic = element.select("img").last().attr("data-original");
                 String url = element.select("a").attr("href");
-                String name = element.select("img").attr("title");
+                String name =  element.select(".v-item-title").text().replace("可可影视-kekys.com", "").trim();
                 if (!pic.startsWith("http")) {
                     pic = picUrl + pic;
                 }
@@ -100,6 +101,7 @@ public class NCat extends Spider {
         String PlayUrl = "";
         for (int i = 0; i < tabs.size(); i++) {
             String tabName = tabs.get(i).select("span").last().text();
+            if (Arrays.asList("超清", "4K(高峰不卡)").contains(tabName)) continue;
             if (!"".equals(PlayFrom)) {
                 PlayFrom = PlayFrom + "$$$" + tabName;
             } else {
@@ -140,7 +142,7 @@ public class NCat extends Spider {
             try {
                 String pic = element.select("img").attr("data-original");
                 String url = element.attr("href");
-                String name = element.select("img").attr("title");
+                String name =  element.select(".v-item-title").text().replace("可可影视-kekys.com", "").trim();
                 if (!pic.startsWith("http")) {
                     pic = picUrl + pic;
                 }
@@ -156,16 +158,27 @@ public class NCat extends Spider {
     public String playerContent(String flag, String id, List<String> vipFlags) throws Exception {
         Document doc = Jsoup.parse(OkHttp.string(playUrl.concat(id), getHeaders()));
         String regex = "window.whatTMDwhatTMDPPPP = '(.*?)'";
-
+        String playSource = "playSource=\\{(.*?)\\}";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(doc.html());
         String url = "";
         if (matcher.find()) {
             url = matcher.group(1);
-            String regex1 = "KKYS\\.safePlay\\(\\)\\.url(\"(.*?)\"),";
+            Pattern playSourcePattern = Pattern.compile(playSource);
+            Matcher playSourceMatcher = playSourcePattern.matcher(doc.html());
+            //playSourceMatcher.find();
+            String srcUrl = Util.findByRegex("https?://[^\\s/$.?#].+\\.m3u8", doc.html(), 0);
+            if (StringUtils.isNoneBlank(srcUrl)) {
+                return Result.get().url(srcUrl).header(getHeaders()).string();
+
+            }
+            String js = playSourceMatcher.group(1);
+
+            String regex1 = "KKYS\\['safePlay'\\]\\(\\)\\['url'\\]\\(\"([^\"]+)\"\\)";
             Pattern pattern1 = Pattern.compile(regex1);
-            Matcher matcher1 = pattern1.matcher(doc.html());
-            String iv = "";
+            String jsSource = Util.unicodeToString(js);
+            Matcher matcher1 = pattern1.matcher(jsSource);
+            String iv = "VNF9aVQF!G*0ux@2hAigUeH3";
             if (matcher1.find()) {
                 iv = matcher1.group(1);
             }
@@ -178,7 +191,7 @@ public class NCat extends Spider {
         try {
             String encryptedKey = "VNF9aVQF!G*0ux@2hAigUeH3";
 
-            return AESEncryption.decrypt(encryptedData, encryptedKey, iv,AESEncryption.ECB_PKCS_7_PADDING);
+            return AESEncryption.decrypt(encryptedData, encryptedKey, iv, AESEncryption.ECB_PKCS_7_PADDING);
         } catch (Exception e) {
             e.printStackTrace();
             return "123456";

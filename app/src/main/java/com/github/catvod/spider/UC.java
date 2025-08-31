@@ -2,6 +2,7 @@ package com.github.catvod.spider;
 
 import android.content.Context;
 import android.text.TextUtils;
+
 import com.github.catvod.api.UCApi;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.uc.ShareData;
@@ -44,9 +45,10 @@ public class UC extends Spider {
      * 獲取詳情內容視頻播放來源（多 shared_link）
      *
      * @param ids share_link 集合
+     * @param i
      * @return 詳情內容視頻播放來源
      */
-    public String detailContentVodPlayFrom(List<String> ids) {
+    public String detailContentVodPlayFrom(List<String> ids, int index) {
         List<String> playFrom = new ArrayList<>();
        /* if (ids.size() < 2){
             return TextUtils.join("$$$",  UCApi.get().getPlayFormatList());
@@ -55,10 +57,10 @@ public class UC extends Spider {
         for (int i = 1; i <= ids.size(); i++) {
 
             for (String s : UCApi.get().getPlayFormatList()) {
-                playFrom.add(String.format(Locale.getDefault(), "uc" + s + "#%02d", i));
+                playFrom.add(String.format(Locale.getDefault(), "uc" + s + "#%02d%02d", i, index));
 
             }
-            playFrom.add("uc原画"+i);
+            playFrom.add("uc原画" + i + index);
         }
         return TextUtils.join("$$$", playFrom);
     }

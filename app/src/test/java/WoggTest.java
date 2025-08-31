@@ -67,7 +67,7 @@ public class WoggTest {
     @org.junit.Test
     public void detailContent() throws Exception {
 
-        String content = spider.detailContent(Arrays.asList("/voddetail/88884.html"));
+        String content = spider.detailContent(Arrays.asList("/voddetail/94312.html"));
         System.out.println("detailContent--" + content);
 
         JsonObject map = Json.safeObject(content);
