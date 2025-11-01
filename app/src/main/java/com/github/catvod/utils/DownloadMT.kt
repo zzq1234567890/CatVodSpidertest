@@ -4,28 +4,22 @@ import com.github.catvod.crawler.SpiderDebug
 import com.github.catvod.net.OkHttp
 import com.github.catvod.utils.ProxyVideo.getMimeType
 import com.github.catvod.utils.ProxyVideo.parseRange
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import okhttp3.Response
 import org.apache.commons.lang3.StringUtils
 import java.io.InputStream
 import java.io.SequenceInputStream
-import java.util.Vector
+import java.util.*
 import kotlin.math.min
 
 object DownloadMT {
-    private val THREAD_NUM: Int = Runtime.getRuntime().availableProcessors() * 2
+    private val THREAD_NUM: Int = 16
 
     private val infos = mutableMapOf<String, Array<Any>>();
 
-    fun proxyMultiThread(url: String, headers: Map<String, String>): Array<out Any?>? =
-        runBlocking {
-            proxyAsync(url, headers)
-        }
+    fun proxyMultiThread(url: String, headers: Map<String, String>): Array<out Any?>? = runBlocking {
+        proxyAsync(url, headers)
+    }
 
     /**
      * 获取是否分片信息，顺带请求一个1MB块
@@ -52,11 +46,10 @@ object DownloadMT {
             if (info == null) {
                 infos.clear()
                 info = CoroutineScope(Dispatchers.IO).async { getInfo(url, headers) }.await()
-                infos[url] = info
-            /*    //支持分片，先返回这个1MB块
-                if (info[0] as Int == 206) {
-                    return info
-                }*/
+                infos[url] = info/*    //支持分片，先返回这个1MB块
+                    if (info[0] as Int == 206) {
+                        return info
+                    }*/
             }
 
             val code = info[0] as Int
@@ -78,8 +71,7 @@ object DownloadMT {
             /* if (total.toLong() < 1024 * 1024 * 100) {
                  return proxy(url, headers)
              }*/
-            var range =
-                if (StringUtils.isAllBlank(headers["range"])) headers["Range"] else headers["range"]
+            var range = if (StringUtils.isAllBlank(headers["range"])) headers["Range"] else headers["range"]
             if (StringUtils.isAllBlank(range)) range = "bytes=0-";
             SpiderDebug.log("---proxyMultiThread,Range:$range")
             val rangeObj = parseRange(
@@ -128,8 +120,7 @@ object DownloadMT {
 
             /* respHeaders.put("Access-Control-Allow-Credentials", "true");
         respHeaders.put("Access-Control-Allow-Origin", "*");*/
-            resHeader["Content-Length"] =
-                (partList[THREAD_NUM - 1][1] - partList[0][0] + 1).toString()
+            resHeader["Content-Length"] = (partList[THREAD_NUM - 1][1] - partList[0][0] + 1).toString()
             resHeader.remove("content-length")
 
             resHeader["Content-Range"] = String.format(
@@ -156,12 +147,10 @@ object DownloadMT {
     fun generatePart(rangeObj: Map<String?, String>, total: String): List<LongArray> {
         val totalSize = total.toLong()
         //超过10GB，分块是32Mb，不然是16MB
-        val partSize =
-            if (totalSize >  1024L * 1024L * 1024L * 10L) 1024 * 1024 * 8 * 4L else 1024 * 1024 * 8 * 2L
+        val partSize = if (totalSize > 1024L * 1024L * 1024L * 10L) 1024 * 1024 * 8 * 4L else 1024 * 1024 * 8 * 2L
 
         var start = rangeObj["start"]!!.toLong()
-        var end =
-            if (StringUtils.isAllBlank(rangeObj["end"])) start + partSize else rangeObj["end"]!!.toLong()
+        var end = if (StringUtils.isAllBlank(rangeObj["end"])) start + partSize else rangeObj["end"]!!.toLong()
 
 
         end = min(end.toDouble(), (totalSize - 1).toDouble()).toLong()

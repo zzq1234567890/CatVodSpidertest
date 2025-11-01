@@ -120,6 +120,8 @@ public class YunPanBa extends Cloud {
                 shareLinks.add(element.attr("href").trim());
             } else if (element.attr("href").matches(Util.patternAli)) {
                 shareLinks.add(element.attr("href").trim());
+            } else if (element.attr("href").startsWith(BaiDuPan.URL_START)) {
+                shareLinks.add(element.attr("href").trim());
             }
         }
 
