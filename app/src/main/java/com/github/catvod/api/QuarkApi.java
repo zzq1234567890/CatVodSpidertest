@@ -227,15 +227,18 @@ public class QuarkApi {
 
         String fileId = split[0], fileToken = split[1], shareId = split[2], stoken = split[3];
         String playUrl = "";
-        if (flag.contains("quark原画")) {
-            playUrl = this.getDownload(shareId, stoken, fileId, fileToken, true);
-        } else {
-            playUrl = this.getLiveTranscoding(shareId, stoken, fileId, fileToken, flag);
-        }
         Map<String, String> header = getHeaders();
         header.remove("Host");
         header.remove("Content-Type");
-        return Result.get().url(ProxyServer.INSTANCE.buildProxyUrl(playUrl, header)).octet().header(header).string();
+        if (flag.contains("quark原画")) {
+            playUrl = this.getDownload(shareId, stoken, fileId, fileToken, true);
+            return Result.get().url(ProxyServer.INSTANCE.buildProxyUrl(playUrl, header)).octet().header(header).string();
+        } else {
+            playUrl = this.getLiveTranscoding(shareId, stoken, fileId, fileToken, flag);
+            return Result.get().url(proxyVideoUrl(playUrl, header)).octet().header(header).string();
+        }
+
+
     }
 
     private String proxyVideoUrl(String url, Map<String, String> header) {

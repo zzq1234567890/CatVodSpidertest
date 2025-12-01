@@ -11,8 +11,8 @@ import kotlinx.coroutines.runBlocking
 
 
 object ProxyServer {
-    private  val THREAD_NUM = Runtime.getRuntime().availableProcessors()
-    private val partSize = 1024 * 1024 * 2
+    private val THREAD_NUM = Runtime.getRuntime().availableProcessors()
+    private val partSize = 1024 * 1024
     private var port = 12345
     private var httpServer: AdvancedHttpServer? = null
     private val infos = mutableMapOf<String, MutableMap<String, MutableList<String>>>();
@@ -37,15 +37,20 @@ object ProxyServer {
                     }
                 };
                 httpServer?.addRoutes("/proxy") { req, response ->
-                    run {
-                        val key = req.queryParams["key"];
-                        val url = urlMap[key]
-                        val header = headerMap[key]
+                    try {
+                        run {
+                            val key = req.queryParams["key"];
+                            val url = urlMap[key]
+                            val header = headerMap[key]
 
-                        if (url != null && header != null) {
-                            proxyAsync(url, header, req, response)
+                            if (url != null && header != null) {
+                                proxyAsync(url, header, req, response)
+                            }
                         }
+                    } catch (e: Exception) {
+                        SpiderDebug.log("代理视频出错:" + e.message)
                     }
+
                 }
                 httpServer?.start()
 
@@ -163,6 +168,7 @@ object ProxyServer {
             }
         }
     }
+
 
     private fun queryToMap(query: String?): Map<String, String>? {
         if (query == null) {

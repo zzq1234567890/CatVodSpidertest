@@ -18,7 +18,7 @@ public class ProxyVideoTest {
                // "https://js.shipin520.com/pc/images/new/banner20250225.mp4", new HashMap<>());
                 "http://172.16.1.217:18089/ng-grid/video.mp4", new HashMap<>());
         System.out.println(url);*/
-        System.out.println(ProxyServer.INSTANCE.buildProxyUrl("https://media.w3.org/2010/05/sintel/trailer.mp4", Map.of("header","2","header2","2")));
+        System.out.println(ProxyServer.INSTANCE.buildProxyUrl("http://172.16.1.217:18089/ng-grid/video.mp4", Map.of("header","2","header2","2")));
         ProxyServer.INSTANCE.start();
 
         while (true) {

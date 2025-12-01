@@ -64,7 +64,7 @@ class BaiDuPan : Spider() {
             return TextUtils.join("$$$",  BaiduDrive.get().getPlayFormatList());
         }*/
         for (i in 1..ids.size) {
-            playFrom.add("BD原画" + i + index)
+            playFrom.add( String.format(Locale.getDefault(), "BD原画" +  "#%02d_%02d", i, index))
            /* for (s in getPlayFormatList()) {
                 playFrom.add(String.format(Locale.getDefault(), "BD" + s + "#%02d%02d", i, index))
             }*/

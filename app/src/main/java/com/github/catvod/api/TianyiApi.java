@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 
 public class TianyiApi {
     private String apiUrl = "https://cloud.189.cn/api/open/share/";
-    public static final String URL_START = "https://cloud.189.cn/";
+    public static final String URL_CONTAIN = "cloud.189.cn/";
 
 
     private Map<String, JsonObject> shareTokenCache = new HashMap<>();
@@ -221,41 +221,30 @@ public class TianyiApi {
 
 
     public ShareData getShareData(String url, String accessCode) {
-        String shareCode = "";
-        // 第一种匹配规则：使用预编译的 regex
-        Matcher matcher = Pattern.compile("https:\\/\\/cloud\\.189\\.cn\\/web\\/share\\?code=([^&]+)").matcher(url);
+        // 从整个URL中直接提取访问码，无论格式如何
+        Matcher accessMatcher = Pattern.compile("访问码[：:]([a-zA-Z0-9]+)").matcher(url);
+        if (accessMatcher.find()) {
+            accessCode = accessMatcher.group(1);
+        } else if (accessCode == null || accessCode.isEmpty()) {
+            accessCode = "";
+        }
+
+        String shareCode = null;
+        // 第一种匹配规则：兼容http和https
+        Matcher matcher = Pattern.compile("https?:\\/\\/cloud\\.189\\.cn\\/web\\/share\\?code=([^&\\s]+)").matcher(url);
         if (matcher.find() && matcher.group(1) != null) {
             shareCode = matcher.group(1);
-            // 从shareCode中提取访问码
-            Matcher accessMatcher = Pattern.compile("访问码：([a-zA-Z0-9]+)").matcher(shareCode);
-            if (accessMatcher.find()) {
-                accessCode = accessMatcher.group(1);
-
-            } else {
-                accessCode = "";
-            }
         } else {
-            // 第二种匹配规则：直接匹配 cloud.189.cn/t/ 格式
-            Matcher fallbackMatcher = Pattern.compile("https://cloud\\.189\\.cn/t/([^&]+)").matcher(url);
+            // 第二种匹配规则：直接匹配 cloud.189.cn/t/ 格式，兼容http和https，匹配到空格前
+            Matcher fallbackMatcher = Pattern.compile("https?:\\/\\/cloud\\.189\\.cn\\/t/([^\\s]+)").matcher(url);
             if (fallbackMatcher.find()) {
                 shareCode = fallbackMatcher.group(1);
-            } else {
-                shareCode = null;
-            }
-            // 再次尝试从shareCode提取访问码
-            if (shareCode != null) {
-                Matcher accessMatcher = Pattern.compile("访问码：([a-zA-Z0-9]+)").matcher(shareCode);
-                accessCode = accessMatcher.find() ? accessMatcher.group(1) : "";
-            } else {
-                accessCode = "";
             }
         }
 
-        shareCode = shareCode.split("（访问码")[0].trim();
         ShareData shareData = new ShareData(shareCode, "0");
         shareData.setSharePwd(accessCode);
         return shareData;
-
     }
 
 

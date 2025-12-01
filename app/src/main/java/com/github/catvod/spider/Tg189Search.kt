@@ -3,8 +3,8 @@ package com.github.catvod.spider
 import com.github.catvod.bean.Result
 import com.github.catvod.bean.Vod
 import com.github.catvod.net.OkHttp
+import com.github.catvod.utils.Json
 import com.github.catvod.utils.Util
-import org.jsoup.Jsoup
 import java.net.URLEncoder
 import java.nio.charset.Charset
 
@@ -12,7 +12,7 @@ import java.nio.charset.Charset
  * @author zhixc
  */
 class Tg189Search : Cloud() {
-    private val URL = "https://tg.252035.xyz/"
+    private val URL = "https://tgsou.252035.xyz/"
 
     private val header: Map<String, String>
         get() {
@@ -30,16 +30,24 @@ class Tg189Search : Cloud() {
             )
         val list: MutableList<Vod> = ArrayList()
         val html = OkHttp.string(url, header)
-        val arr = html.split(":I".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-        if (arr.isNotEmpty()) {
-            for (s in arr) {
-                val doc = Jsoup.parse(s)
-                val id = doc.select(" a").eachAttr("href")
-                    .first { it.contains("189") || it.contains("139") }
-                val name=doc.select("strong").text()
+        val json = Json.safeObject(html);
+        json["results"].asJsonArray.forEach { element ->
+            val array = element.asString.split("$$$")
+            if (array.size >= 2 && array[1].isNotEmpty()) {
+                array[1].split("##").forEach {
 
-                list.add(Vod(id, name, "", ""))
+
+                    val id = it.split("@")[0]
+                    val pic = it.split("@")[1].split("$$")[0]
+                    val name = it.split("@")[1].split("$$")[1]
+
+                    list.add(Vod(id, name, pic, ""))
+                }
+
+
             }
+
+
         }
 
 

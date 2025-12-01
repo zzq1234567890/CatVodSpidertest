@@ -58,7 +58,7 @@ public class Pan123 extends Spider {
         for (int i = 1; i <= ids.size(); i++) {
 
             for (String s : Pan123Api.INSTANCE.getPlayFormatList()) {
-                playFrom.add(String.format(Locale.getDefault(), "pan123" + s + "#%02d%02d", i, index));
+                playFrom.add(String.format(Locale.getDefault(), "pan123" + s + "#%02d_%02d", i, index));
 
             }
             //  playFrom.add("天意" + i + index);

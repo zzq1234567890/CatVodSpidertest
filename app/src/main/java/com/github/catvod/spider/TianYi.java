@@ -55,7 +55,7 @@ public class TianYi extends Spider {
         for (int i = 1; i <= ids.size(); i++) {
 
             for (String s : TianyiApi.get().getPlayFormatList()) {
-                playFrom.add(String.format(Locale.getDefault(), "天意" + s + "#%02d%02d", i, index));
+                playFrom.add(String.format(Locale.getDefault(), "天意" + s + "#%02d_%02d", i, index));
 
             }
           //  playFrom.add("天意" + i + index);

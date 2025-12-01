@@ -44,7 +44,7 @@ public class UCApi {
     private String cookieToken = "";
     private String ckey = "";
     private Map<String, Map<String, Object>> shareTokenCache = new HashMap<>();
-    private String pr = "pr=UCBrowser&fr=pc";
+    private String pr = "pr=UCBrowser&fr=pc&sys=darwin&ve=1.8.6&ut=Nk27FcCv6q1eo6rXz8QHR/nIG6qLA3jh7KdL+agFgcOvww==";
     private List<String> subtitleExts = Arrays.asList(".srt", ".ass", ".scc", ".stl", ".ttml");
     private Map<String, String> saveFileIdCaches = new HashMap<>();
     private String saveDirId = null;
@@ -181,9 +181,9 @@ public class UCApi {
         List<String> playFrom = UCApi.get().getPlayFormatList();
         List<String> playFromtmp = new ArrayList<>();
         playFromtmp.add("uc原画");
-        for (String s : playFrom) {
+      /*  for (String s : playFrom) {
             playFromtmp.add("uc" + s);
-        }
+        }*/
         List<String> playUrl = new ArrayList<>();
 
         if (files.isEmpty()) {
@@ -217,23 +217,19 @@ public class UCApi {
         SpiderDebug.log("flag:" + flag);
         String fileId = split[0], fileToken = split[1], shareId = split[2], stoken = split[3];
         String playUrl = "";
-        if (flag.contains("uc原画")) {
-            playUrl = this.getDownload(shareId, stoken, fileId, fileToken, true);
-        } else {
-            playUrl = this.getLiveTranscoding(shareId, stoken, fileId, fileToken, flag);
-        }
         SpiderDebug.log("origin playUrl:" + playUrl);
         Map<String, String> header = getHeaders();
         header.remove("Host");
         header.remove("Content-Type");
-
-        //UCTV 可以直接播放，不需要代理
-        if (testVideo(playUrl)) {
-            SpiderDebug.log("UCTV 可以直接播放，不需要代理" );
-
+        if (flag.contains("uc原画")) {
+            playUrl = this.getDownload(shareId, stoken, fileId, fileToken, true);
             return Result.get().url(playUrl).string();
+        } else {
+            playUrl = this.getLiveTranscoding(shareId, stoken, fileId, fileToken, flag);
+            return Result.get().url(proxyVideoUrl(playUrl, new HashMap<>())).string();
         }
-        return Result.get().url(proxyVideoUrl(playUrl, header)).octet().header(header).string();
+
+
     }
 
     private boolean testVideo(String url) {

@@ -21,9 +21,9 @@ public class TianyiApiTest {
     @Test
     public void getShareData() throws Exception {
 
-        com.github.catvod.bean.tianyi.ShareData shareData = TianyiApi.get().getShareData("https://cloud.189.cn/web/share?code=ZvEjUvq6FNr2", "");
+       // com.github.catvod.bean.tianyi.ShareData shareData = TianyiApi.get().getShareData("https://cloud.189.cn/web/share?code=ZvEjUvq6FNr2", "");
         // TianyiApi.get().getVod(shareData);
-        com.github.catvod.bean.tianyi.ShareData shareData1 = TianyiApi.get().getShareData("https://cloud.189.cn/web/share?code=2eyARfBzURZj（访问码：kz6y）", "");
+        com.github.catvod.bean.tianyi.ShareData shareData1 = TianyiApi.get().getShareData("http://cloud.189.cn/t/3uIFJrzIFJV3（访问码：qf4b）", "");
 
         //  TianyiApi.get().getVod(shareData1);
         ShareData shareData2 = TianyiApi.get().getShareData("https://cloud.189.cn/t/ZvEjUvq6FNr2", "");

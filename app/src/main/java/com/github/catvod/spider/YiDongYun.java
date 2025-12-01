@@ -2,13 +2,10 @@ package com.github.catvod.spider;
 
 import android.content.Context;
 import android.text.TextUtils;
-
 import com.github.catvod.api.YunDrive;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
-import com.github.catvod.crawler.SpiderDebug;
-
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -96,8 +93,8 @@ public class YiDongYun extends Spider {
         int i = 0;
         for (String id : ids) {
             i++;
-            playFrom.add("移动(极速)" + i);
-            playFrom.add("移动(原画)" + i);
+            playFrom.add(String.format("移动(极速)#%2d", i));
+            playFrom.add(String.format("移动(原画)#%2d", i));
 
         }
 

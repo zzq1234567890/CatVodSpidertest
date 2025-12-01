@@ -11,7 +11,7 @@ import java.nio.charset.Charset
 /**
  * @author zhixc
  */
-class TgQuarkSearch : Cloud() {
+class Tg123Search : Cloud() {
     private val URL = "https://tgsou.252035.xyz/"
 
     private val header: Map<String, String>
@@ -25,7 +25,7 @@ class TgQuarkSearch : Cloud() {
     @Throws(Exception::class)
     override fun searchContent(key: String, quick: Boolean): String {
         val url =
-            URL + "?channelUsername=alyp_1,clouddriveresources,dianyingshare,hdhhd21,jdjdn1111,leoziyuan,NewQuark,PanjClub,Quark_Movies,xiangxiunb,yunpanchat,yunpanqk,XiangxiuNB,alyp_4K_Movies,alyp_Animation,alyp_TV,alyp_JLP&pic=true&keyword=" + URLEncoder.encode(
+            URL + "?channelUsername=wp123zy,xx123pan,yp123pan,zyfb123&pic=true&keyword=" + URLEncoder.encode(
                 key, Charset.defaultCharset().name()
             )
         val list: MutableList<Vod> = ArrayList()
@@ -49,7 +49,6 @@ class TgQuarkSearch : Cloud() {
 
 
         }
-
 
 
         return Result.string(list)

@@ -54,9 +54,9 @@ public class Quark extends Spider {
         }*/
 
         for (int i = 1; i <= ids.size(); i++) {
-            playFrom.add("quark原画" + i + index);
+            playFrom.add(String.format("quark原画#%02d_%02d" ,i , index));
             for (String s : QuarkApi.get().getPlayFormatList()) {
-                playFrom.add(String.format(Locale.getDefault(), "quark" + s + "#%02d%02d", i, index));
+                playFrom.add(String.format(Locale.getDefault(), "quark" + s + "#%02d_%02d", i, index));
 
             }
 
@@ -75,7 +75,7 @@ public class Quark extends Spider {
         for (String id : ids) {
             ShareData shareData = QuarkApi.get().getShareData(id);
             try {
-                playUrl.add(QuarkApi.get().getVod(shareData).getVodPlayUrl());
+                playUrl.add(QuarkApi.get().getVod(shareData)==null?"":QuarkApi.get().getVod(shareData).getVodPlayUrl());
             } catch (Exception e) {
                 SpiderDebug.log("获取播放地址出错:" + e.getMessage());
             }
