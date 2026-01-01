@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.bean.quark.Cache;
@@ -24,30 +23,14 @@ import com.github.catvod.net.OkHttp;
 import com.github.catvod.net.OkResult;
 import com.github.catvod.spider.Init;
 import com.github.catvod.spider.Proxy;
-import com.github.catvod.utils.Json;
-import com.github.catvod.utils.Notify;
-import com.github.catvod.utils.Path;
-import com.github.catvod.utils.ProxyServer;
-import com.github.catvod.utils.ProxyVideo;
-import com.github.catvod.utils.QRCode;
-import com.github.catvod.utils.ResUtil;
-import com.github.catvod.utils.Util;
+import com.github.catvod.utils.*;
 import com.google.gson.Gson;
-
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -431,7 +414,7 @@ public class QuarkApi {
         for (Map<String, Object> item : items) {
             if (Boolean.TRUE.equals(item.get("dir"))) {
                 subDir.add(item);
-            } else if (Boolean.TRUE.equals(item.get("file")) && "video".equals(item.get("obj_category"))) {
+            } else if (Boolean.TRUE.equals(item.get("file")) && (Util.isMedia((String) item.get("file_name")))) {
                 if ((Double) item.get("size") < 1024 * 1024 * 5) continue;
                 item.put("stoken", this.shareTokenCache.get(shareData.getShareId()).get("stoken"));
                 videos.add(Item.objectFrom(item, shareData.getShareId(), shareIndex));

@@ -23,7 +23,8 @@ object BaiduDrive {
         "Referer" to "https://pan.baidu.com/"
     )
 
-
+    //是否删除过文件标志
+    private var deleteTag = 0;
     private val saveDirName = "TVBOX_BD"
 
     private var cookies = BaiDuYunHandler.get().token
@@ -165,7 +166,8 @@ object BaiduDrive {
                 // 处理items
                 items.forEach { item ->
                     if (item.asJsonObject["isdir"].asInt == 1) {
-                        val folderPath = "/sharelink$uk-${item.asJsonObject["fs_id"].asString}/${item.asJsonObject["server_filename"].asString}"
+                        val folderPath =
+                            "/sharelink$uk-${item.asJsonObject["fs_id"].asString}/${item.asJsonObject["server_filename"].asString}"
                         if (folderPath !in seenFolders) {
                             seenFolders.add(folderPath)
                             pendingFolders.add(
@@ -426,9 +428,12 @@ object BaiduDrive {
             )
             // 先清空文件夹在创建文件夹
 
-            _deleteTransferFile("/$saveDirName")
-            //创建路径
-            createSaveDir()
+            if (deleteTag == 0) {
+                _deleteTransferFile("/$saveDirName")
+                //创建路径
+                createSaveDir()
+                deleteTag = 1
+            }
 
 
             val data =

@@ -6,6 +6,7 @@ import com.github.catvod.api.YunDrive;
 import com.github.catvod.bean.Result;
 import com.github.catvod.bean.Vod;
 import com.github.catvod.crawler.Spider;
+import com.github.catvod.crawler.SpiderDebug;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -108,10 +109,17 @@ public class YiDongYun extends Spider {
      * @param ids share_link 集合
      * @return 詳情內容視頻播放地址
      */
-    public String detailContentVodPlayUrl(List<String> ids) throws Exception {
+    public String detailContentVodPlayUrl(List<String> ids) {
         List<String> playUrl = new ArrayList<>();
         for (String id : ids) {
-            playUrl.add(getVod(List.of(id)).getVodPlayUrl());
+            try {
+                playUrl.add(getVod(List.of(id)).getVodPlayUrl());
+            }catch (Exception e) {
+                SpiderDebug.log("获取播放地址出错:" + e.getMessage());
+                playUrl.add("");
+            }
+
+
         }
         return TextUtils.join("$$$", playUrl);
     }

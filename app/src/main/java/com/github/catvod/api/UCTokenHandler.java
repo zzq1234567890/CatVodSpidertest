@@ -178,25 +178,7 @@ public class UCTokenHandler {
             JsonObject resData = Json.safeObject(okResult.getBody());
             String code = resData.get("code").getAsString();
 
-            pathname = "/token";
-            reqId = generateReqId(deviceID, timestamp);
-
-            Map<String, String> postData = new HashMap<>();
-            postData.put("req_id", reqId);
-            postData.put("app_ver", (String) conf.get("appVer"));
-            postData.put("device_id", deviceID);
-            postData.put("device_brand", "Xiaomi");
-            postData.put("platform", "tv");
-            postData.put("device_name", "M2004J7AC");
-            postData.put("device_model", "M2004J7AC");
-            postData.put("build_device", "M2004J7AC");
-            postData.put("build_product", "M2004J7AC");
-            postData.put("device_gpu", "Adreno (TM) 550");
-            postData.put("activity_rect", URLEncoder.encode("{}", "UTF-8"));
-            postData.put("channel", (String) conf.get("channel"));
-            postData.put("code", code);
-
-            OkResult okResult1 = OkHttp.post(conf.get("codeApi") + pathname, Json.toJson(postData), headers);
+            OkResult okResult1 = getAccessToken(code, false);
 
 
             if (okResult1.getCode() == 200) {
@@ -208,15 +190,14 @@ public class UCTokenHandler {
                 SpiderDebug.log("uc Token获取成功：" + tokenResData.get("data").getAsJsonObject().get("access_token").getAsString());
 
                 //保存到本地
-                cache.setTokenUser(User.objectFrom(tokenResData.get("data").getAsJsonObject().get("access_token").getAsString()));
-
+                cache.setTokenUser(User.objectFrom(Json.toJson(tokenResData.get("data").getAsJsonObject())));
                 //停止检验线程，关闭弹窗
                 stopService();
                 return result;
             }
 
         } else if (okResult.getCode() == 400) {
-            SpiderDebug.log("uc Token获取失败：" +okResult.getBody());
+            SpiderDebug.log("uc Token获取失败：" + okResult.getBody());
 
             return Map.of("status", "NEW");
 
@@ -225,6 +206,74 @@ public class UCTokenHandler {
 
         platformStates.remove("UC_TOKEN");
         return Map.of("status", "EXPIRED");
+    }
+    /**
+     * 获取访问令牌或者刷新令牌
+     *
+     * @param code
+     * @param refresh 是否刷新，如果是，code为refresh_token
+     * @return
+     * @throws UnsupportedEncodingException
+     */
+    public OkResult getAccessToken(String code, boolean refresh) {
+
+        String timestamp = String.valueOf(new Date().getTime() / 1000 + 1) + "000";
+        String deviceID = StringUtils.isAllBlank((String) addition.get("DeviceID")) ? (String) addition.get("DeviceID") : generateDeviceID(timestamp);
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Accept", "application/json, text/plain, */*");
+        headers.put("User-Agent", "Mozilla/5.0 (Linux; U; Android 13; zh-cn; M2004J7AC Build/UKQ1.231108.001) AppleWebKit/533.1 (KHTML, like Gecko) Mobile Safari/533.1");
+
+        String pathname = "/token";
+        String reqId = generateReqId(deviceID, timestamp);
+
+        Map<String, String> postData = new HashMap<>();
+        postData.put("req_id", reqId);
+        postData.put("app_ver", (String) conf.get("appVer"));
+        postData.put("device_id", deviceID);
+        postData.put("device_brand", "Xiaomi");
+        postData.put("platform", "tv");
+        postData.put("device_name", "M2004J7AC");
+        postData.put("device_model", "M2004J7AC");
+        postData.put("build_device", "M2004J7AC");
+        postData.put("build_product", "M2004J7AC");
+        postData.put("device_gpu", "Adreno (TM) 550");
+        try {
+            postData.put("activity_rect", URLEncoder.encode("{}", "UTF-8"));
+        } catch (Exception e) {
+
+            SpiderDebug.log("encode出错" + e.getMessage());
+            return null;
+        }
+
+        postData.put("channel", conf.get("channel"));
+        if (refresh) {
+            postData.put("refresh_token", code);
+            SpiderDebug.log("开始刷新uc accesstoken");
+        } else {
+            postData.put("code", code);
+            SpiderDebug.log("开始获取uc accesstoken");
+        }
+
+
+        return OkHttp.post(conf.get("codeApi") + pathname, Json.toJson(postData), headers);
+    }
+    /**
+     * 刷新refresh token
+     *
+     * @param refreshToken 刷新token
+     * @return  防火新的accesstoken
+     */
+    public String refreshToken(String refreshToken) {
+        OkResult okResult1 = this.getAccessToken(refreshToken, true);
+
+        if (okResult1.getCode() == 200) {
+            JsonObject tokenResData = Json.safeObject(okResult1.getBody());
+            SpiderDebug.log("uc Token刷新成功：" + tokenResData.get("data").getAsJsonObject().get("access_token").getAsString());
+            //保存到本地
+            cache.setTokenUser(User.objectFrom(Json.toJson(tokenResData.get("data").getAsJsonObject())));
+            return tokenResData.get("data").getAsJsonObject().get("access_token").getAsString();
+        }
+        return "";
     }
 
     public String download(String token, String saveFileId) throws Exception {
@@ -266,6 +315,11 @@ public class UCTokenHandler {
 
         OkResult okResult1 = OkHttp.get(API_URL + pathname, params, headers);
         JsonObject obj = Json.safeObject(okResult1.getBody());
+        if (okResult1.getCode() != 200) {
+            Notify.show(obj.get("error_info").getAsString());
+            SpiderDebug.log("uc TV 错误信息：" + obj.get("error_info").getAsString());
+            return null;
+        }
         String downloadUrl = obj.get("data").getAsJsonObject().get("video_info").getAsJsonArray().get(0).getAsJsonObject().get("url").getAsString();
         SpiderDebug.log("uc TV 下载文件内容：" + downloadUrl);
         return downloadUrl;

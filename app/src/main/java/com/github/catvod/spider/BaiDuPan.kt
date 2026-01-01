@@ -78,7 +78,7 @@ class BaiDuPan : Spider() {
      * @param ids share_link 集合
      * @return 詳情內容視頻播放地址
      */
-    @Throws(Exception::class)
+
     fun detailContentVodPlayUrl(ids: List<String>): String? {
         val playUrl: MutableList<String?> = ArrayList<String?>()
         for (id in ids) {
@@ -86,6 +86,7 @@ class BaiDuPan : Spider() {
                 playUrl.add(getVod(id).getVodPlayUrl())
             } catch (e: Exception) {
                 SpiderDebug.log("获取播放地址出错:" + e.message)
+                playUrl.add("")
             }
         }
         return TextUtils.join("$$$", playUrl)

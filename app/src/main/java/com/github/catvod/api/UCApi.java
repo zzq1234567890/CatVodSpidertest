@@ -87,7 +87,15 @@ public class UCApi {
         cache = Cache.objectFrom(Path.read(getCache()));
         tokenCache = Cache.objectFrom(Path.read(qrCodeHandler.getCache()));
 
-        this.cookieToken = tokenCache.getUser().getCookie();
+        java.lang.String tokenCacheJson = tokenCache.getUser().getCookie();
+        if (StringUtils.isNoneBlank(tokenCacheJson)) {
+
+
+            //刷新token,并返回
+            this.cookieToken = qrCodeHandler.refreshToken(Json.safeObject(tokenCacheJson).getAsJsonObject().get("refresh_token").getAsString());
+
+            SpiderDebug.log("UC初始化获取到的cookieToken: " + cookieToken);
+        }
         SpiderDebug.log("UC初始化获取到的cookieToken: " + cookieToken);
     }
 
@@ -622,7 +630,8 @@ public class UCApi {
             for (Map<String, Object> stringStringMap : ((List<Map<String, Object>>) ((Map<String, Object>) listData.get("data")).get("list"))) {
                 list.add((String) stringStringMap.get("fid"));
             }
-            api("file/delete?" + this.pr, Collections.emptyMap(), Map.of("action_type", "2", "filelist", Json.toJson(list), "exclude_fids", ""), 0, "POST");
+            api("file/delete?" + this.pr + "&uc_param_str=", Collections.emptyMap(), Map.of("action_type", 2, "filelist", list, "exclude_fids", Collections.emptyList()), 0, "POST");
+
         }
     }
 
