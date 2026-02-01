@@ -3,8 +3,10 @@ package com.github.catvod.api
 import com.github.catvod.bean.Result
 import com.github.catvod.bean.Vod
 import com.github.catvod.bean.Vod.VodPlayBuilder
+import com.github.catvod.crawler.SpiderDebug
 import com.github.catvod.net.OkHttp
 import com.github.catvod.utils.Json
+import com.github.catvod.utils.Notify
 import com.github.catvod.utils.ProxyServer.buildProxyUrl
 import com.github.catvod.utils.Util
 import com.github.catvod.utils.Util.MEDIA
@@ -76,7 +78,11 @@ object BaiduDrive {
             if (urlInfo.containsKey("error")) return null
 
             val tokenInfo = getShareToken(urlInfo)
-            if (tokenInfo?.containsKey("error") == true) return null
+            if (tokenInfo?.containsKey("error") == true) {
+                SpiderDebug.log("该分享已被取消，无法访问")
+                Notify.show("该分享已被取消，无法访问")
+                throw RuntimeException("该分享已被取消，无法访问")
+            }
 
             getAllVideos(tokenInfo!!)
         } catch (e: Exception) {
@@ -372,7 +378,7 @@ object BaiduDrive {
                 throw Exception("Failed to retrieve UID from Baidu Drive.")
             }
         } catch (e: Exception) {
-            println("获取百度网盘用户ID失败: ${e.message}")
+            SpiderDebug.log("获取百度网盘用户ID失败: ${e.message}")
             return ""
         }
     }
@@ -452,17 +458,17 @@ object BaiduDrive {
                     to = (result["extra"].asJsonObject)["list"].asJsonArray[0].asJsonObject["to"].asString
                     // videoData["to"] = to
                     if (to.isNotEmpty()) {
-                        println("成功转存文件到: $to")
+                        SpiderDebug.log("成功转存文件到: $to")
                         break
                     }
                 } catch (e: Exception) {
-                    println("解析转存响应出错: ${e.message}")
+                    SpiderDebug.log("解析转存响应出错: ${e.message}")
                     continue
                 }
             }
 
             if (to.isEmpty()) {
-                println("转存文件失败，无法获取下载链接")
+                SpiderDebug.log("转存文件失败，无法获取下载链接")
                 return ""
             }
 
@@ -487,10 +493,10 @@ object BaiduDrive {
             val responseJson = Json.safeObject(mediaInfoResponse)
             val info = responseJson["info"].asJsonObject
             val downloadUrl = info["dlink"].asString
-            println("获取到下载链接: $downloadUrl")
+            SpiderDebug.log("获取到下载链接: $downloadUrl")
             downloadUrl
         } catch (e: Exception) {
-            println("获取下载链接过程中出错: ${e.message}")
+            SpiderDebug.log("获取下载链接过程中出错: ${e.message}")
             e.printStackTrace()
             ""
         }
@@ -499,7 +505,7 @@ object BaiduDrive {
     fun getVideoUrl(videoData: JsonObject, flag: String): Map<String, Any> {
         return try {
             val bdUid = getBdUid()
-            println("获取百度网盘用户ID: $bdUid")
+            SpiderDebug.log("获取百度网盘用户ID: $bdUid")
 
             if (flag.contains("原画")) {
 
@@ -538,7 +544,7 @@ object BaiduDrive {
                 )
             }
         } catch (e: Exception) {
-            println("获取播放链接失败: ${e.message}")
+            SpiderDebug.log("获取播放链接失败: ${e.message}")
             _handleError
         }
     }
@@ -599,7 +605,7 @@ object BaiduDrive {
              pUrl ?: dlink*/
             dlink
         } catch (e: Exception) {
-            println("获取下载链接失败: ${e.message}")
+            SpiderDebug.log("获取下载链接失败: ${e.message}")
             ""
         }
     }
@@ -677,7 +683,7 @@ object BaiduDrive {
             saveDirId
 
         } catch (e: Exception) {
-            println("创建保存目录失败: ${e.message}")
+            SpiderDebug.log("创建保存目录失败: ${e.message}")
             null
         }
     }
@@ -725,10 +731,10 @@ object BaiduDrive {
 
 
 
-            println("删除文件响应: ${response.body}")
-            println("响应状态码: ${response.code}")
+            SpiderDebug.log("删除文件响应: ${response.body}")
+            SpiderDebug.log("响应状态码: ${response.code}")
         } catch (e: Exception) {
-            println("删除文件出错: ${e.message}")
+            SpiderDebug.log("删除文件出错: ${e.message}")
             e.printStackTrace()
         }
     }

@@ -6,10 +6,7 @@ import com.github.catvod.bean.Result;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.net.OkResult;
-import com.github.catvod.utils.Json;
-import com.github.catvod.utils.ProxyServer;
-import com.github.catvod.utils.ProxyVideo;
-import com.github.catvod.utils.Util;
+import com.github.catvod.utils.*;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -113,6 +110,11 @@ public class YunDrive {
 
 
         OkResult okResult = OkHttp.post(baseUrl + "getOutLinkInfoV6", encrypt(Json.toJson(requestBody)), baseHeaders);
+        if(Json.safeObject(decrypt(okResult.getBody())).getAsJsonObject().get("data").isJsonNull()){
+            SpiderDebug.log("该分享已被取消，无法访问");
+            Notify.show("该分享已被取消，无法访问");
+            throw new RuntimeException("该分享已被取消，无法访问");
+        }
         JsonObject result = Json.safeObject(decrypt(okResult.getBody())).getAsJsonObject("data");
         cache.put(cacheKey, result);
         return result;

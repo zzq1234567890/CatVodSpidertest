@@ -6,7 +6,7 @@
 昨天更新之后，很多人问如何使用，今天写一篇补充教程。
 
 ## 地址
-https://androidcatvodspider.netlify.app/json/index.json
+https://android.lushunming.qzz.io/json/index.json
 
 ## 如何操作
 

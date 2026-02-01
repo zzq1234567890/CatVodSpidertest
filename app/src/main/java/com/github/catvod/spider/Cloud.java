@@ -12,9 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 import static com.github.catvod.api.TianyiApi.URL_CONTAIN;
 
@@ -135,13 +133,15 @@ public class Cloud extends Spider {
             resultMap.clear();
             List<String> urls = new ArrayList<>();
             List<String> froms = new ArrayList<>();
+            Map<String, String> map = new ConcurrentHashMap<>(shareLinks.size());
 
-            List<Future<ImmutablePair<String, String>>> futures = new ArrayList<>();
+
+            CountDownLatch latch = new CountDownLatch(shareLinks.size());
             int i = 0;
             for (String shareLink : shareLinks) {
 
                 int finalI = ++i;
-                futures.add(service.submit(() -> {
+                service.submit(() -> {
 
                     String url = "";
                     String from = "";
@@ -166,19 +166,25 @@ public class Cloud extends Spider {
                         url = pan123.detailContentVodPlayUrl(List.of(shareLink));
                         from = pan123.detailContentVodPlayFrom(List.of(shareLink), finalI);
                     }
-                    return new ImmutablePair<>(url, from);
-                }));
+                    //只有连接不为空才放入进去
+                    if (StringUtils.isNoneBlank(url)) {
+
+                        map.put(url, from);
+                    }
+                    latch.countDown();
+
+                });
+
 
             }
 
-            for (Future<ImmutablePair<String, String>> future : futures) {
-                //只有连接不为空才放入进去
-                if (StringUtils.isNoneBlank(future.get().left)) {
-                    urls.add(future.get().left);
-                    froms.add(future.get().right);
-                }
+            latch.await();
 
+            for (Map.Entry<String, String> entry : map.entrySet()) {
+                urls.add(entry.getKey());
+                froms.add(entry.getValue());
             }
+
             resultMap.put(Util.MD5(Json.toJson(shareLinks)), new ImmutablePair<>(urls, froms));
 
             SpiderDebug.log("---urls：" + Json.toJson(urls));
@@ -188,5 +194,7 @@ public class Cloud extends Spider {
         } finally {
             service.shutdown();
         }
+
+
     }
 }

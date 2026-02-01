@@ -7,6 +7,7 @@ import com.github.catvod.bean.pan123.ShareInfo
 import com.github.catvod.crawler.SpiderDebug
 import com.github.catvod.net.OkHttp
 import com.github.catvod.utils.Json
+import com.github.catvod.utils.Notify
 import com.github.catvod.utils.ProxyServer.buildProxyUrl
 import com.github.catvod.utils.Util
 import com.google.gson.JsonObject
@@ -82,7 +83,7 @@ object Pan123Api {
                     val token = authData.getAsJsonObject("data").get("token").asString
                     // setAuth(token)
                     SpiderDebug.log("登录成功")
-                    authToken=token
+                    authToken = token
 
                     return authData.get("data").asJsonObject
                 }
@@ -145,7 +146,11 @@ object Pan123Api {
     fun getFilesByShareUrl(shareKey: String, sharePwd: String): List<ShareInfo> {
         // 获取分享信息
         val cate = getShareInfo(shareKey, sharePwd, 0, 0)
-
+        if (cate.isEmpty()) {
+            SpiderDebug.log("该分享已被取消，无法访问")
+            Notify.show("该分享已被取消，无法访问")
+            throw RuntimeException("该分享已被取消，无法访问")
+        }
         return cate
     }
 
@@ -269,7 +274,7 @@ object Pan123Api {
             "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
             "Content-Type" to "application/json",
             "Authorization" to "Bearer ${getAuth()}",
-            "platform" to  "android"
+            "platform" to "android"
 
         )
 

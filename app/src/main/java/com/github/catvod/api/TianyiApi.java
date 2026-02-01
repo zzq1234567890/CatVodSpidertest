@@ -127,9 +127,9 @@ public class TianyiApi {
             JsonArray listData = listFile(1, shareData, files, subs, shareData.getShareId(), shareData.getFolderId(), 1);
 
         } catch (Exception e) {
-            SpiderDebug.log("资源已取消:" + e.getMessage());
-            Notify.show("资源已取消");
-            throw new RuntimeException(e);
+            SpiderDebug.log("Files list is empty!");
+            Notify.show("该分享已被取消，无法访问");
+            throw new RuntimeException("该分享已被取消，无法访问");
         }
 
 
@@ -299,14 +299,20 @@ public class TianyiApi {
              *   "shareType" : 1.0
              * }
              */
-            if (Objects.nonNull(shareToken.get("res_code")) && shareToken.get("res_code").getAsInt() == 0) {
-                shareData.setShareId(shareToken.get("shareId").getAsString());
-                shareData.setShareMode(shareToken.get("shareMode").getAsInt());
-                shareData.setFolder(shareToken.get("isFolder").getAsBoolean());
-                shareData.setFileId(shareToken.get("fileId").getAsString());
-                shareData.setFolderId(shareToken.get("fileId").getAsString());
+            try {
+                if (Objects.nonNull(shareToken.get("res_code")) && shareToken.get("res_code").getAsInt() == 0) {
+                    shareData.setShareId(shareToken.get("shareId").getAsString());
+                    shareData.setShareMode(shareToken.get("shareMode").getAsInt());
+                    shareData.setFolder(shareToken.get("isFolder").getAsBoolean());
+                    shareData.setFileId(shareToken.get("fileId").getAsString());
+                    shareData.setFolderId(shareToken.get("fileId").getAsString());
 
-                this.shareTokenCache.put(shareData.getShareId(), shareToken);
+                    this.shareTokenCache.put(shareData.getShareId(), shareToken);
+                }
+            } catch (Exception e) {
+                SpiderDebug.log("该分享已被取消，无法访问");
+                Notify.show("该分享已被取消，无法访问");
+                throw new RuntimeException("该分享已被取消，无法访问");
             }
         }
     }
