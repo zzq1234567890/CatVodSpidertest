@@ -1,5 +1,7 @@
 package com.github.catvod.utils
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.github.catvod.crawler.SpiderDebug
 import java.io.BufferedOutputStream
 import java.io.BufferedReader
@@ -10,13 +12,10 @@ import java.net.Socket
 import java.net.URLDecoder
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.text.Charsets.UTF_8
 
-class AdvancedHttpServer(
-    private val port: Int, private val threadPoolSize: Int = Runtime.getRuntime().availableProcessors()
-) {
+class AdvancedHttpServer(private val port: Int) {
     private val serverSocket: ServerSocket
     private val threadPool: ExecutorService
     private var isRunning = false
@@ -24,7 +23,7 @@ class AdvancedHttpServer(
 
     init {
         serverSocket = ServerSocket(port)
-        threadPool = Executors.newFixedThreadPool(threadPoolSize)
+        threadPool = Executors.newFixedThreadPool(10)
     }
 
     fun addRoutes(path: String, handler: (Request, Response) -> Unit) {
@@ -41,28 +40,27 @@ class AdvancedHttpServer(
                 val clientSocket = serverSocket.accept()
                 threadPool.execute { handleRequest(clientSocket) }
             } catch (e: IOException) {
-
-                if (isRunning) {
-                    e.printStackTrace(); SpiderDebug.log("出错：" + e.message)
-                }
+                e.printStackTrace(); SpiderDebug.log("出错：" + e.message)
+                if (isRunning) e.printStackTrace(); SpiderDebug.log("出错：" + e.message)
 
             }
         }
     }
 
-    private fun handleRequest(clientSocket: Socket) {
-        clientSocket.use {
-            val reader = BufferedReader(InputStreamReader(it.inputStream, UTF_8))
-            val writer = BufferedOutputStream(it.outputStream)
+    @RequiresApi(Build.VERSION_CODES.KITKAT)
+    private fun handleRequest(socket: Socket) {
+        socket.use { clientSocket ->
 
+
+            val reader = BufferedReader(InputStreamReader(clientSocket.inputStream, UTF_8))
+            val writer = BufferedOutputStream(clientSocket.outputStream)
             try {
+
 
                 // 解析请求行
                 val requestLine = reader.readLine() ?: ""
                 SpiderDebug.log("requestLine: $requestLine")
-                if (requestLine.isBlank()) {
-                    return // 空请求直接返回
-                }
+
                 val (method, path, _) = parseRequestLine(requestLine)
 
                 // 解析路径和查询参数
@@ -74,7 +72,8 @@ class AdvancedHttpServer(
                 while (reader.readLine().also { line = it } != null && line!!.isNotEmpty()) {
                     val colonIndex = line!!.indexOf(':')
                     if (colonIndex > 0) {
-                        headers[line!!.substring(0, colonIndex).trim()] = line!!.substring(colonIndex + 1).trim()
+                        headers[line!!.substring(0, colonIndex).trim()] =
+                            line!!.substring(colonIndex + 1).trim()
                     }
                 }
 
@@ -83,7 +82,8 @@ class AdvancedHttpServer(
                 val requestBody = if (contentLength > 0) {
                     buildString {
                         repeat(contentLength) {
-                            val char = reader.read().takeIf { it != -1 }?.toChar() ?: return@buildString
+                            val char =
+                                reader.read().takeIf { it != -1 }?.toChar() ?: return@buildString
                             append(char)
                         }
                     }
@@ -111,10 +111,7 @@ class AdvancedHttpServer(
                 response.flush()
             } catch (e: IOException) {
                 e.printStackTrace()
-                SpiderDebug.log("IO错误: " + e.message)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                SpiderDebug.log("处理请求时发生未知错误: " + e.message)
+                SpiderDebug.log("AdvancedHttpServer处理请求出错：" + e.message)
             }
         }
     }
@@ -128,6 +125,104 @@ class AdvancedHttpServer(
         }
     }
 
+    private fun handleRoot(request: Request, response: Response) {
+        response.setContentType("text/html")
+        response.start()
+
+        response.write("<html><body>")
+        response.write("<h1>高级HTTP服务器</h1>")
+        response.write("<p>支持参数解析和分块响应</p>")
+        response.write("<h2>功能演示</h2>")
+        response.write("<ul>")
+        response.write("<li><a href=\"/echo?param1=value1&param2=value2\">Echo参数</a></li>")
+        response.write("<li><a href=\"/stream\">流式响应</a></li>")
+        response.write("<li><a href=\"/slow\">服务器推送事件</a></li>")
+        response.write("</ul>")
+
+        // 演示表单提交
+        response.write("<h2>表单提交测试</h2>")
+        response.write("<form action=\"/echo\" method=\"post\">")
+        response.write("Name: <input type=\"text\" name=\"name\"><br>")
+        response.write("Age: <input type=\"number\" name=\"age\"><br>")
+        response.write("<input type=\"submit\" value=\"提交\">")
+        response.write("</form>")
+
+        response.write("</body></html>")
+    }
+
+    private fun handleEcho(request: Request, response: Response) {
+        response.setContentType("text/html")
+        response.start()
+
+        response.write("<html><body>")
+        response.write("<h1>Echo服务</h1>")
+
+        // 输出请求信息
+        response.write("<h2>请求信息</h2>")
+        response.write("<p>方法: ${request.method}</p>")
+        response.write("<p>路径: ${request.path}</p>")
+
+        // 输出查询参数
+        response.write("<h2>查询参数</h2>")
+        response.write("<ul>")
+        if (request.queryParams.isEmpty()) {
+            response.write("<li>无</li>")
+        } else {
+            request.queryParams.forEach { (key, value) ->
+                response.write("<li>$key: $value</li>")
+            }
+        }
+        response.write("</ul>")
+
+        // 输出请求头
+        response.write("<h2>请求头</h2>")
+        response.write("<ul>")
+        request.headers.forEach { (key, value) ->
+            response.write("<li>$key: $value</li>")
+        }
+        response.write("</ul>")
+
+        // 输出请求体
+        response.write("<h2>请求体</h2>")
+        response.write("<pre>${request.body}</pre>")
+
+        // 输出解析后的参数
+        response.write("<h2>解析后的参数</h2>")
+        response.write("<ul>")
+        if (request.bodyParams.isEmpty()) {
+            response.write("<li>无</li>")
+        } else {
+            request.bodyParams.forEach { (key, value) ->
+                response.write("<li>$key: $value</li>")
+            }
+        }
+        response.write("</ul>")
+
+        response.write("</body></html>")
+    }
+
+    private fun handleStreamResponse(response: Response) {
+        response.setContentType("text/plain")
+        response.start()
+
+        for (i in 1..5) {
+            response.write("这是第 $i 部分内容\n")
+            Thread.sleep(500)
+        }
+    }
+
+    private fun handleSlowResponse(response: Response) {
+        response.setContentType("text/event-stream")
+        response.setHeader("Cache-Control", "no-cache")
+        response.setHeader("Connection", "keep-alive")
+        response.start()
+
+        for (i in 1..10) {
+            response.write("data: 消息 $i\n\n")
+            response.flush()
+            Thread.sleep(1000)
+        }
+    }
 
     private fun handleNotFound(response: Response) {
         response.setStatusCode(404)
@@ -182,21 +277,9 @@ class AdvancedHttpServer(
         return emptyMap()
     }
 
-    // 添加优雅关闭
-    fun stop(graceful: Boolean = true) {
+    fun stop() {
         isRunning = false
-        if (graceful) {
-            threadPool.shutdown()
-            try {
-                if (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
-                    threadPool.shutdownNow()
-                }
-            } catch (e: InterruptedException) {
-                threadPool.shutdownNow()
-            }
-        } else {
-            threadPool.shutdownNow()
-        }
+        threadPool.shutdown()
         serverSocket.close()
     }
 
