@@ -2,6 +2,9 @@
 -flattenpackagehierarchy com.github.catvod.spider.merge
 -dontwarn org.slf4j.impl.StaticLoggerBinder
 
+-keep class org.slf4j.** { *; }
+-dontwarn org.slf4j.**
+
 # Spider
 -keep class com.github.catvod.js.* { *; }
 -keep class com.github.catvod.crawler.* { *; }
@@ -47,9 +50,10 @@
 
 
 
+
 -keepattributes SourceFile,LineNumberTable
 
 
 
 # 禁用代码混淆
-#-dontobfuscate
+# -dontobfuscate

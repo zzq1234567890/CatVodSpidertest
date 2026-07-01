@@ -6,12 +6,15 @@ import com.github.catvod.bean.Vod.VodPlayBuilder
 import com.github.catvod.crawler.SpiderDebug
 import com.github.catvod.net.OkHttp
 import com.github.catvod.utils.Json
+import com.github.catvod.utils.Launcher
 import com.github.catvod.utils.Notify
-import com.github.catvod.utils.ProxyServer.buildProxyUrl
+import com.github.catvod.utils.ProxyServer
+import com.github.catvod.utils.ProxyServerIns
 import com.github.catvod.utils.Util
 import com.github.catvod.utils.Util.MEDIA
 import com.google.gson.JsonObject
 import java.net.URLEncoder
+import java.nio.charset.Charset
 import java.util.*
 
 object BaiduDrive {
@@ -307,7 +310,7 @@ object BaiduDrive {
                 "shareid" to folderInfo["shareid"]!!.toString(),
                 "page" to folderInfo["page"].toString(),
                 "num" to "9999",
-                "dir" to URLEncoder.encode(folderInfo["dir"]!!.toString()),
+                "dir" to URLEncoder.encode(folderInfo["dir"]!!.toString(), Charset.defaultCharset().name()),
                 "desc" to "0",
                 "order" to "name",
             )
@@ -788,7 +791,8 @@ object BaiduDrive {
     fun playerContent(json: JsonObject, flag: String): String {
         val play = getVideoUrl(json, flag);
         val header = play["header"] as Map<String, String>
-        return Result.get().url(buildProxyUrl(play["url"] as String, header)).octet().header(header).string();
+        return Result.get().url( Launcher.buildProxyUrl(play["url"] as String, header)).octet().header(header)
+            .string();
     }
 
     fun getPlayFormatList(): Array<String> {

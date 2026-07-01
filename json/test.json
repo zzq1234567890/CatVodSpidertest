@@ -1,5 +1,5 @@
 {
-  "spider": "https://gh.llkk.cc/https://raw.githubusercontent.com/lushunming/AndroidCatVodSpider/123/jar/custom_spider.jar;md5;77ff0d77d6fccecddd174ee82161f3bd",
+  "spider": "https://ghproxy.net/https://raw.githubusercontent.com/lushunming/AndroidCatVodSpider/JNI/jar/custom_spider.jar;md5;1f692d0df3e4b5edbfeba550ef675a61",
   "lives": [
     {
       "name": "电视直播",
@@ -41,7 +41,24 @@
       "type": 3,
       "api": "csp_Introduce"
     },
-
+    {
+      "key": "Wogg",
+      "name": "玩偶哥哥",
+      "type": 3,
+      "api": "csp_Wogg",
+      "searchable": 1,
+      "changeable": 1,
+      "ext": "{\"site\": [\"https://wogg.xxooo.cf/\"]}"
+    },
+    {
+      "key": "SeedHub",
+      "name": "SeedHub",
+      "type": 3,
+      "api": "csp_SeedHub",
+      "searchable": 1,
+      "changeable": 1,
+      "ext": {}
+    },
     {
       "key": "TgSearchBaidu",
       "name": "☁TgSearchBaidu┃网盘",

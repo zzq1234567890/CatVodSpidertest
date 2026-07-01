@@ -8,8 +8,8 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-
 import com.github.catvod.crawler.SpiderDebug;
+import com.github.catvod.utils.Launcher;
 import com.github.catvod.utils.ProxyServer;
 
 import java.lang.reflect.Field;
@@ -42,10 +42,10 @@ public class Init {
 
     public static void init(Context context) {
         get().app = ((Application) context);
-        SpiderDebug.log("自定義爬蟲代碼載入成功！" + "1");
+        SpiderDebug.log("自定義爬蟲代碼載入成功！");
         execute(() -> {
-            ProxyServer.INSTANCE.stop();
-            ProxyServer.INSTANCE.start();
+          //  ProxyServer.INSTANCE.start();
+            Launcher.startServer(context);
         });
     }
 

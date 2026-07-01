@@ -11,6 +11,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
 import java.net.URLEncoder
+import java.nio.charset.Charset
 
 class DiDa : Cloud() {
     private val headers: HashMap<String?, String?>
@@ -136,7 +137,7 @@ class DiDa : Cloud() {
     override fun searchContent(key: String?, quick: Boolean): String? {
         val doc = Jsoup.parse(
             OkHttp.string(
-                searchUrl + URLEncoder.encode(key), this.headers
+                searchUrl + URLEncoder.encode(key,Charset.defaultCharset().name()), this.headers
             )
         )
         val list: MutableList<Vod?> = ArrayList<Vod?>()

@@ -15,6 +15,7 @@ import okhttp3.HttpUrl
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.net.URLEncoder
+import java.nio.charset.Charset
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.regex.Pattern
 
@@ -172,7 +173,7 @@ class SeedHub : Cloud() {
                     val movieTitle = HttpUrl.parse(link)?.queryParameter("movie_title")
                     link = HttpUrl.parse(link)?.newBuilder()?.removeAllQueryParameters("movie_title")
                         ?.addEncodedQueryParameter(
-                            "movie_title", URLEncoder.encode(movieTitle)
+                            "movie_title", URLEncoder.encode(movieTitle,Charset.defaultCharset().name())
                         )?.build().toString()
                     val string = OkHttp.string(link, header)
                     val docEle = Jsoup.parse(string)
@@ -190,7 +191,7 @@ class SeedHub : Cloud() {
                     val movieTitle = HttpUrl.parse(link)?.queryParameter("movie_title")
                     link = HttpUrl.parse(link)?.newBuilder()?.removeAllQueryParameters("movie_title")
                         ?.addEncodedQueryParameter(
-                            "movie_title", URLEncoder.encode(movieTitle)
+                            "movie_title", URLEncoder.encode(movieTitle,Charset.defaultCharset().name())
                         )?.build().toString()
                     val string = OkHttp.string(link, header)
                     val docEle = Jsoup.parse(string)
@@ -208,7 +209,7 @@ class SeedHub : Cloud() {
                     val movieTitle = HttpUrl.parse(link)?.queryParameter("movie_title")
                     link = HttpUrl.parse(link)?.newBuilder()?.removeAllQueryParameters("movie_title")
                         ?.addEncodedQueryParameter(
-                            "movie_title", URLEncoder.encode(movieTitle)
+                            "movie_title", URLEncoder.encode(movieTitle,Charset.defaultCharset().name())
                         )?.build().toString()
                     val string = OkHttp.string(link, header)
                     val docEle = Jsoup.parse(string)
@@ -239,7 +240,7 @@ class SeedHub : Cloud() {
     }
 
     private fun searchContent(key: String?, pg: String?): String? {
-        val searchURL = siteUrl + String.format("/s/%s/?page=%s", URLEncoder.encode(key), pg)
+        val searchURL = siteUrl + String.format("/s/%s/?page=%s", URLEncoder.encode(key,Charset.defaultCharset().name()), pg)
         val html = OkHttp.string(searchURL, this.header)
         val doc = Jsoup.parse(html)
 
